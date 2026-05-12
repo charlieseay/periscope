@@ -162,9 +162,34 @@ export function isOpenRouterProvider(providerId: string): boolean {
 	return providerId === "openrouter";
 }
 
+export function isOllamaProvider(providerId: string): boolean {
+	return providerId === "ollama";
+}
+
 export function getReasoningDefaultOnMetadata(
 	context: GatewayProviderContext,
 ): boolean | undefined {
 	const value = context.model.metadata?.reasoningDefaultOn;
 	return typeof value === "boolean" ? value : undefined;
+}
+
+export function isOllamaQwen3ModelIdFallback(
+	request: Pick<GatewayStreamRequest, "providerId" | "modelId">,
+): boolean {
+	// Local Ollama models are discovered from /api/tags and often only provide
+	// names such as "qwen3-coder:30b". Prefer catalog metadata when present.
+	return (
+		isOllamaProvider(request.providerId) &&
+		normalizedModelId(request).includes("qwen3")
+	);
+}
+
+export function modelReasoningDefaultsOn(options: {
+	request: Pick<GatewayStreamRequest, "providerId" | "modelId">;
+	context: GatewayProviderContext;
+}): boolean {
+	return (
+		getReasoningDefaultOnMetadata(options.context) ??
+		isOllamaQwen3ModelIdFallback(options.request)
+	);
 }
