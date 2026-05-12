@@ -1,13 +1,17 @@
-import {
-	buildGatewayReasoningOptions,
-	resolveModelFamily,
-} from "./anthropic-compatible";
+import { buildGatewayReasoningOptions } from "./anthropic-compatible";
 import { buildOpenAINativeProviderOptions } from "./generic-compatible";
 import {
 	buildGlmThinkingProviderOptionsPatch,
-	isGlmModel,
 	isNativeZaiProvider,
 } from "./glm-thinking";
+import {
+	isDeepSeekFamily,
+	isDeepSeekProvider,
+	isGlmModel,
+	isKimiK26Family as isKimiK26FamilyFact,
+	isMoonshotKimiModelIdFallback,
+	isOpenRouterProvider,
+} from "../model-facts";
 import type {
 	MatchedProviderOptionRule,
 	ProviderOptionBuildInput,
@@ -22,20 +26,21 @@ import {
 	type ProviderOptionsPatch,
 } from "./utils";
 
-function isOpenRouterProvider(input: ProviderOptionMatchInput): boolean {
-	return input.request.providerId === "openrouter";
-}
-
 function isKimiK26Family(input: ProviderOptionMatchInput): boolean {
-	return input.modelFamily?.trim().toLowerCase() === "kimi-k2.6";
+	return isKimiK26FamilyFact(input.context);
 }
 
 function isMoonshotKimiModel(input: ProviderOptionMatchInput): boolean {
-	return input.request.modelId.toLowerCase().includes("moonshotai/kimi-");
+	return isMoonshotKimiModelIdFallback(input.request);
 }
 
-function isDeepSeekFamily(input: ProviderOptionMatchInput): boolean {
-	return !!input.modelFamily?.trim().toLowerCase().includes("deepseek");
+function isDeepSeekModelOrProviderDefault(
+	input: ProviderOptionMatchInput,
+): boolean {
+	return (
+		isDeepSeekFamily(input.context) ||
+		isDeepSeekProvider(input.request.providerId)
+	);
 }
 
 function resolveFamilyThinkingType(
@@ -160,7 +165,7 @@ const openRouterReasoningRule: ProviderOptionRule = {
 	phase: "provider-reasoning",
 	description:
 		"OpenRouter expects reasoning controls under its first-class reasoning object.",
-	applies: isOpenRouterProvider,
+	applies: (input) => isOpenRouterProvider(input.request.providerId),
 	suppresses: { genericThinking: true, genericEffort: true },
 	build: (input) =>
 		buildReasoningPatchForProvider(
@@ -210,7 +215,9 @@ const kimiK26ThinkingRule: ProviderOptionRule = {
 	phase: "model-family",
 	description:
 		"Kimi K2.6 uses thinking.type and defaults to enabled when reasoning is unset.",
-	applies: (input) => isKimiK26Family(input) && !isOpenRouterProvider(input),
+	applies: (input) =>
+		isKimiK26Family(input) &&
+		!isOpenRouterProvider(input.request.providerId),
 	suppresses: { genericThinking: true },
 	build: (input) => {
 		const thinkingType = resolveFamilyThinkingType(input, "enabled");
@@ -230,8 +237,8 @@ const deepSeekThinkingRule: ProviderOptionRule = {
 	description:
 		"DeepSeek models use thinking.type only for explicit reasoning enabled/disabled.",
 	applies: (input) =>
-		!isOpenRouterProvider(input) &&
-		(isDeepSeekFamily(input) || input.request.providerId === "deepseek"),
+		!isOpenRouterProvider(input.request.providerId) &&
+		isDeepSeekModelOrProviderDefault(input),
 	suppresses: { genericThinking: true },
 	build: (input) => {
 		const thinkingType = resolveFamilyThinkingType(input, undefined);
@@ -288,13 +295,17 @@ const routedGlmReasoningRule: ProviderOptionRule = {
 			input.request,
 			input.context,
 			input.providerOptionsKey,
-			{ includeProviderBuckets: !isOpenRouterProvider(input) },
+			{
+				includeProviderBuckets: !isOpenRouterProvider(input.request.providerId),
+			},
 		),
 };
 
 /**
  * The table is the provider/family behavior matrix. Adding a new exception
  * should mean adding a named rule here, not adding a branch in the composer.
+ * Keep model/provider fact detection in `providers/model-facts.ts`; see
+ * `sdk/packages/llms/AGENTS.md` for the sources-of-truth boundary.
  */
 export const PROVIDER_OPTION_RULES: ReadonlyArray<ProviderOptionRule> = [
 	directAnthropicProviderRule,
@@ -349,18 +360,4 @@ export function buildProviderOptionRulePatches(
 	input: ProviderOptionBuildInput,
 ): Array<ProviderOptionsPatch | undefined> {
 	return matchedRules.map(({ rule }) => rule.build(input));
-}
-
-export function resolveProviderOptionMatchInput(options: {
-	request: ProviderOptionMatchInput["request"];
-	context: ProviderOptionMatchInput["context"];
-	providerOptionsKey: string;
-	target: ProviderOptionMatchInput["target"];
-	isAnthropicCompatibleModelId: boolean;
-	anthropicReasoningPolicyKind?: ProviderOptionMatchInput["anthropicReasoningPolicyKind"];
-}): ProviderOptionMatchInput {
-	return {
-		...options,
-		modelFamily: resolveModelFamily(options.context),
-	};
 }
