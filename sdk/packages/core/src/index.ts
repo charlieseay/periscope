@@ -484,6 +484,7 @@ export {
 	captureMentionUsed,
 	captureModeSwitch,
 	captureProviderApiError,
+	captureProviderConfigured,
 	captureSkillUsed,
 	captureSubagentExecution,
 	captureTaskCompleted,

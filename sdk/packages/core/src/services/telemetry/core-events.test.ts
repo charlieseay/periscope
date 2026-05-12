@@ -2,6 +2,7 @@ import type { ITelemetryService } from "@cline/shared";
 import { describe, expect, test, vi } from "vitest";
 import {
 	captureExtensionActivated,
+	captureProviderConfigured,
 	captureTelemetryOptOut,
 	captureWorkspaceInitError,
 	captureWorkspaceInitialized,
@@ -68,6 +69,37 @@ describe("captureTelemetryOptOut", () => {
 			"user.opt_out",
 			undefined,
 		);
+	});
+});
+
+describe("captureProviderConfigured", () => {
+	test("emits user.provider_configured with the provider id as a normal (opt-out-respecting) event", () => {
+		const stub = createTelemetryStub();
+		captureProviderConfigured(stub.telemetry, "anthropic");
+		expect(stub.capture).toHaveBeenCalledTimes(1);
+		// Must NOT be captureRequired — the BYO configure step is not an
+		// essential lifecycle event and should respect telemetry opt-out.
+		expect(stub.captureRequired).not.toHaveBeenCalled();
+		const { event, properties } = captureCallAt(stub, 0);
+		expect(event).toBe("user.provider_configured");
+		// Payload shape mirrors `captureAuthSucceeded`: `{ provider }`,
+		// nothing else. Keep this strict so we don't accidentally leak
+		// `apiKey` / `baseUrl` / model identifiers into the funnel.
+		expect(properties).toEqual({ provider: "anthropic" });
+	});
+
+	test("emits with provider=undefined when none is supplied", () => {
+		const stub = createTelemetryStub();
+		captureProviderConfigured(stub.telemetry);
+		const { event, properties } = captureCallAt(stub, 0);
+		expect(event).toBe("user.provider_configured");
+		expect(properties).toEqual({ provider: undefined });
+	});
+
+	test("no-ops when telemetry is undefined", () => {
+		expect(() =>
+			captureProviderConfigured(undefined, "openrouter"),
+		).not.toThrow();
 	});
 });
 
