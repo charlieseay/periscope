@@ -1,3 +1,4 @@
+import { appendFileSync } from "node:fs";
 import {
 	type BasicLogger,
 	captureExtensionActivated,
@@ -14,6 +15,44 @@ import {
 	wasActivationCaptured,
 } from "./telemetry.activation-gate";
 
+/**
+ * Debug-only: when CLINE_TELEMETRY_DEBUG_LOG is set to a file path, attach a
+ * BasicLogger that appends every telemetry event line to that file via the
+ * TelemetryLoggerSink. Independent of stdout/Ink rendering so events are
+ * visible even while the TUI is active. Off by default.
+ */
+function createDebugFileLogger(): BasicLogger | undefined {
+	const path = process.env.CLINE_TELEMETRY_DEBUG_LOG?.trim();
+	if (!path) {
+		return undefined;
+	}
+	const serializeMetadata = (metadata: unknown): string => {
+		if (metadata === undefined) {
+			return "";
+		}
+		try {
+			return ` ${JSON.stringify(metadata)}`;
+		} catch {
+			return ` ${String(metadata)}`;
+		}
+	};
+	const write = (level: string, msg: string, metadata?: unknown) => {
+		try {
+			appendFileSync(
+				path,
+				`${new Date().toISOString()} [${level}] ${msg}${serializeMetadata(metadata)}\n`,
+			);
+		} catch {
+			// best-effort debug; ignore filesystem errors
+		}
+	};
+	return {
+		debug: (msg: string, metadata?: unknown) => write("debug", msg, metadata),
+		log: (msg: string, metadata?: unknown) => write("log", msg, metadata),
+		error: (msg: string, metadata?: unknown) => write("error", msg, metadata),
+	};
+}
+
 type MutableTelemetryService = ITelemetryService & {
 	addAdapter?: (adapter: TelemetryLoggerSink) => void;
 };
@@ -29,6 +68,7 @@ let telemetrySingleton:
 export function getCliTelemetryService(
 	logger?: BasicLogger,
 ): ITelemetryService {
+	const effectiveLogger = logger ?? createDebugFileLogger();
 	if (!telemetrySingleton) {
 		const { version, name, os_type, os_version } = getCliBuildInfo();
 		const config = createClineTelemetryServiceConfig({
@@ -43,23 +83,23 @@ export function getCliTelemetryService(
 		});
 		const handle = createConfiguredTelemetryHandle({
 			...config,
-			logger,
+			logger: effectiveLogger,
 		});
 		telemetrySingleton = {
 			telemetry: handle.telemetry,
-			loggerAttached: Boolean(logger),
+			loggerAttached: Boolean(effectiveLogger),
 			dispose: handle.dispose,
 		};
 		registerDisposable(disposeCliTelemetryService);
 	}
 	if (
-		logger &&
+		effectiveLogger &&
 		telemetrySingleton.loggerAttached !== true &&
 		typeof (telemetrySingleton.telemetry as MutableTelemetryService)
 			.addAdapter === "function"
 	) {
 		(telemetrySingleton.telemetry as MutableTelemetryService).addAdapter?.(
-			new TelemetryLoggerSink({ logger }),
+			new TelemetryLoggerSink({ logger: effectiveLogger }),
 		);
 		telemetrySingleton.loggerAttached = true;
 	}
