@@ -161,3 +161,10 @@ export function isDeepSeekProvider(providerId: string): boolean {
 export function isOpenRouterProvider(providerId: string): boolean {
 	return providerId === "openrouter";
 }
+
+export function getReasoningDefaultOnMetadata(
+	context: GatewayProviderContext,
+): boolean | undefined {
+	const value = context.model.metadata?.reasoningDefaultOn;
+	return typeof value === "boolean" ? value : undefined;
+}
