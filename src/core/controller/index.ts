@@ -874,8 +874,8 @@ export class Controller {
 		const vscodeTerminalExecutionMode = this.stateManager.getGlobalStateKey("vscodeTerminalExecutionMode")
 		const defaultTerminalProfile = this.stateManager.getGlobalSettingsKey("defaultTerminalProfile")
 		const isNewUser = this.stateManager.getGlobalStateKey("isNewUser")
-		// Can be undefined but is set to either true or false by the migration that runs on extension launch in extension.ts
-		const welcomeViewCompleted = !!this.stateManager.getGlobalStateKey("welcomeViewCompleted")
+		// Periscope: no external accounts, onboarding always skipped
+		const welcomeViewCompleted = true
 
 		const customPrompt = this.stateManager.getGlobalSettingsKey("customPrompt")
 		const mcpResponsesCollapsed = this.stateManager.getGlobalStateKey("mcpResponsesCollapsed")

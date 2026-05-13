@@ -328,6 +328,16 @@ function convertApiProviderToProto(provider: string | undefined): ProtoApiProvid
 			return ProtoApiProvider.NOUSRESEARCH
 		case "openai-codex":
 			return ProtoApiProvider.OPENAI_CODEX
+		case "ask-helmsman":
+			return ProtoApiProvider.ASK_HELMSMAN
+		case "ask-nvidia":
+			return ProtoApiProvider.ASK_NVIDIA
+		case "ask-claude":
+			return ProtoApiProvider.ASK_CLAUDE
+		case "ask-gemini":
+			return ProtoApiProvider.ASK_GEMINI
+		case "ask-nova":
+			return ProtoApiProvider.ASK_NOVA
 		default:
 			return ProtoApiProvider.ANTHROPIC
 	}
@@ -420,6 +430,16 @@ export function convertProtoToApiProvider(provider: ProtoApiProvider): ApiProvid
 			return "nousResearch"
 		case ProtoApiProvider.OPENAI_CODEX:
 			return "openai-codex"
+		case ProtoApiProvider.ASK_HELMSMAN:
+			return "ask-helmsman"
+		case ProtoApiProvider.ASK_NVIDIA:
+			return "ask-nvidia"
+		case ProtoApiProvider.ASK_CLAUDE:
+			return "ask-claude"
+		case ProtoApiProvider.ASK_GEMINI:
+			return "ask-gemini"
+		case ProtoApiProvider.ASK_NOVA:
+			return "ask-nova"
 		default:
 			return "anthropic"
 	}

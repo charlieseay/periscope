@@ -5,6 +5,7 @@ import { Logger } from "@/shared/services/Logger"
 import { type ApiHandler, CommonApiHandlerOptions } from ".."
 import { withRetry } from "../retry"
 import { type ApiStream, ApiStreamUsageChunk } from "../transform/stream"
+import { flattenToPrompt } from "./periscope-utils"
 
 const ASK_NOVA_BIN = `${process.env.HOME}/.local/bin/ask_claude_bedrock`
 
@@ -93,26 +94,4 @@ export class AskNovaHandler implements ApiHandler {
 		}
 		return { id: askNovaDefaultModelId, info: askNovaModels[askNovaDefaultModelId] }
 	}
-}
-
-function flattenToPrompt(systemPrompt: string, messages: ClineStorageMessage[]): string {
-	const parts: string[] = []
-
-	if (systemPrompt) {
-		parts.push(`<system>\n${systemPrompt}\n</system>`)
-	}
-
-	for (const msg of messages) {
-		const role = msg.role === "assistant" ? "Assistant" : "User"
-		if (typeof msg.content === "string") {
-			parts.push(`${role}: ${msg.content}`)
-		} else if (Array.isArray(msg.content)) {
-			const textParts = msg.content.filter((b): b is { type: "text"; text: string } => b.type === "text").map((b) => b.text)
-			if (textParts.length > 0) {
-				parts.push(`${role}: ${textParts.join("\n")}`)
-			}
-		}
-	}
-
-	return parts.join("\n\n")
 }

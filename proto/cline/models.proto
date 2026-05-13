@@ -461,6 +461,11 @@ enum ApiProvider {
   NOUSRESEARCH = 39;
   OPENAI_CODEX = 40;
   WANDB = 41;
+  ASK_HELMSMAN = 42;
+  ASK_NVIDIA = 43;
+  ASK_CLAUDE = 44;
+  ASK_GEMINI = 45;
+  ASK_NOVA = 46;
 }
 
 enum ApiFormat {

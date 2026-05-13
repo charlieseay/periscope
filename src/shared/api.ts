@@ -50,7 +50,7 @@ export type ApiProvider =
 	| "ask-nova"
 	| "ask-helmsman"
 
-export const DEFAULT_API_PROVIDER = "openrouter" as ApiProvider
+export const DEFAULT_API_PROVIDER = "ask-helmsman" as ApiProvider
 
 export interface ApiHandlerOptions extends Partial<ApiHandlerSettings> {
 	ulid?: string // Used to identify the task in API requests

@@ -634,10 +634,10 @@ export async function migrateWelcomeViewCompleted(context: vscode.ExtensionConte
 				openAiCodexCredentials,
 			].some((key) => key !== undefined)
 
-			// Set welcomeViewCompleted based on whether user has keys
-			await context.globalState.update("welcomeViewCompleted", hasKey)
+			// Periscope: always skip onboarding — no external accounts needed
+			await context.globalState.update("welcomeViewCompleted", true)
 
-			Logger.log(`Migration: Set welcomeViewCompleted to ${hasKey} based on existing API keys`)
+			Logger.log("Migration: Set welcomeViewCompleted to true (Periscope — no external accounts)")
 		}
 	} catch (error) {
 		Logger.error("Failed to migrate welcomeViewCompleted:", error)

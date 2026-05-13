@@ -21,10 +21,6 @@
 			"label": "Nova (Bedrock Anthropic)"
 		},
 		{
-			"value": "cline",
-			"label": "Cline"
-		},
-		{
 			"value": "openai-codex",
 			"label": "ChatGPT Subscription"
 		},
