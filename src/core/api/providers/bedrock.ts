@@ -326,27 +326,31 @@ export class AwsBedrockHandler implements ApiHandler {
 	 * For custom models, returns the raw model ID without any encoding.
 	 */
 	async getModelId(): Promise<string> {
-		if (!this.options.awsBedrockCustomSelected && this.options.awsUseCrossRegionInference) {
+		// Default cross-region inference to true — newer Claude models require it
+		const useCrossRegion = this.options.awsUseCrossRegionInference !== false
+		// Strip Periscope-internal suffixes (e.g. :1m context variant) that Bedrock doesn't recognize
+		const baseModelId = this.getModel().id.replace(/:1m$/, "")
+		if (!this.options.awsBedrockCustomSelected && useCrossRegion) {
 			if (this.getModel().info.supportsGlobalEndpoint && this.options.awsUseGlobalInference) {
-				return `global.${this.getModel().id}`
+				return `global.${baseModelId}`
 			}
 			const regionPrefix = this.getRegion().slice(0, 3)
 			switch (regionPrefix) {
 				case "us-":
-					return `us.${this.getModel().id}`
+					return `us.${baseModelId}`
 				case "eu-":
-					return `eu.${this.getModel().id}`
+					return `eu.${baseModelId}`
 				case "ap-":
-					if (JP_SUPPORTED_CRIS_MODELS.includes(this.getModel().id)) {
-						return `jp.${this.getModel().id}`
+					if (JP_SUPPORTED_CRIS_MODELS.includes(baseModelId)) {
+						return `jp.${baseModelId}`
 					}
-					return `apac.${this.getModel().id}`
+					return `apac.${baseModelId}`
 				default:
 					// cross region inference is not supported in this region, falling back to default model
-					return this.getModel().id
+					return baseModelId
 			}
 		}
-		return this.getModel().id
+		return baseModelId
 	}
 
 	private static async withTempEnv<R>(updateEnv: () => void, fn: () => Promise<R>): Promise<R> {
