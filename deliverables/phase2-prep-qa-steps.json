@@ -1,0 +1,13 @@
+{
+	"summary": "Periscope Phase 2 prep — open questions answered from Cline fork (read-only source probe). Canonical narrative + risk table live in the Obsidian vault note referenced by v2.",
+	"v1": {
+		"step": "repo_research_artifact",
+		"artifact": "docs/periscope/PHASE2_OPEN_QUESTIONS_RESEARCH.md",
+		"description": "Structured answers with file:line citations under ~/Projects/periscope for QA scanners that only watch the git workspace."
+	},
+	"v2": {
+		"step": "vault_spec_section",
+		"artifact": "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/SeaynicNet/Projects/Periscope/Periscope.md#open-questions",
+		"description": "Open Questions section in the Periscope project spec (human-facing source of truth per original task brief)."
+	}
+}
