@@ -248,20 +248,23 @@ export async function constructNewFileContent(
 	isFinal: boolean,
 	version: "v1" | "v2" = "v1",
 ): Promise<{ newContent: string; matchIndices: number[] }> {
-	const constructor = constructNewFileContentVersionMapping[version]
-	if (!constructor) {
+	const entry = constructNewFileContentVersionMapping[version]
+	if (!entry) {
 		throw new Error(`Invalid version '${version}' for file content constructor`)
 	}
-	return constructor(diffContent, originalContent, isFinal)
+	return entry.step(diffContent, originalContent, isFinal)
 }
 
-const constructNewFileContentVersionMapping: Record<
-	string,
-	(diffContent: string, originalContent: string, isFinal: boolean) => Promise<{ newContent: string; matchIndices: number[] }>
-> = {
-	v1: constructNewFileContentV1,
-	v2: constructNewFileContentV2,
-} as const
+type ConstructNewFileContentHandler = (
+	diffContent: string,
+	originalContent: string,
+	isFinal: boolean,
+) => Promise<{ newContent: string; matchIndices: number[] }>
+
+const constructNewFileContentVersionMapping: Record<"v1" | "v2", { step: ConstructNewFileContentHandler }> = {
+	v1: { step: constructNewFileContentV1 },
+	v2: { step: constructNewFileContentV2 },
+}
 
 async function constructNewFileContentV1(
 	diffContent: string,
