@@ -7,6 +7,7 @@ import { AIhubmixHandler } from "./providers/aihubmix"
 import { AnthropicHandler } from "./providers/anthropic"
 import { AskClaudeHandler } from "./providers/ask-claude"
 import { AskGeminiHandler } from "./providers/ask-gemini"
+import { AskHelmsmanHandler } from "./providers/ask-helmsman"
 import { AskNovaHandler } from "./providers/ask-nova"
 import { AskNvidiaHandler } from "./providers/ask-nvidia"
 import { AskSageHandler } from "./providers/asksage"
@@ -391,6 +392,11 @@ function createHandlerForProvider(
 			})
 		case "ask-nova":
 			return new AskNovaHandler({
+				onRetryAttempt: options.onRetryAttempt,
+				apiModelId: mode === "plan" ? options.planModeApiModelId : options.actModeApiModelId,
+			})
+		case "ask-helmsman":
+			return new AskHelmsmanHandler({
 				onRetryAttempt: options.onRetryAttempt,
 				apiModelId: mode === "plan" ? options.planModeApiModelId : options.actModeApiModelId,
 			})

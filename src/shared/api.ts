@@ -48,6 +48,7 @@ export type ApiProvider =
 	| "ask-nvidia"
 	| "ask-gemini"
 	| "ask-nova"
+	| "ask-helmsman"
 
 export const DEFAULT_API_PROVIDER = "openrouter" as ApiProvider
 
@@ -608,6 +609,48 @@ export const askGeminiModels = {
 		inputPrice: 0,
 		outputPrice: 0,
 		description: "gemini-2.5-flash — Google One subscription (fast fallback)",
+	},
+} as const satisfies Record<string, ModelInfo>
+
+// Periscope — ask-helmsman provider (auto-routing via ai-proxy + ask_helmsman CLI)
+export type AskHelmsmanModelId = keyof typeof askHelmsmanModels
+export const askHelmsmanDefaultModelId: AskHelmsmanModelId = "auto"
+export const askHelmsmanModels = {
+	auto: {
+		maxTokens: 4096,
+		contextWindow: 128_000,
+		supportsImages: false,
+		supportsPromptCache: false,
+		inputPrice: 0,
+		outputPrice: 0,
+		description: "Helmsman auto-routes: NVIDIA → ask_claude → ask_gemini → ask_nova",
+	},
+	web: {
+		maxTokens: 4096,
+		contextWindow: 1_000_000,
+		supportsImages: false,
+		supportsPromptCache: false,
+		inputPrice: 0,
+		outputPrice: 0,
+		description: "Helmsman web route — forces Gemini (Google Search grounding)",
+	},
+	writing: {
+		maxTokens: 4096,
+		contextWindow: 128_000,
+		supportsImages: false,
+		supportsPromptCache: false,
+		inputPrice: 0,
+		outputPrice: 0,
+		description: "Helmsman writing route — forces ask_claude (quality prose)",
+	},
+	code: {
+		maxTokens: 4096,
+		contextWindow: 128_000,
+		supportsImages: false,
+		supportsPromptCache: false,
+		inputPrice: 0,
+		outputPrice: 0,
+		description: "Helmsman code route — forces NVIDIA code lane (qwen3-coder)",
 	},
 } as const satisfies Record<string, ModelInfo>
 

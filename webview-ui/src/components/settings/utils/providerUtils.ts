@@ -3,6 +3,16 @@ import {
 	ApiProvider,
 	anthropicDefaultModelId,
 	anthropicModels,
+	askClaudeDefaultModelId,
+	askClaudeModels,
+	askGeminiDefaultModelId,
+	askGeminiModels,
+	askHelmsmanDefaultModelId,
+	askHelmsmanModels,
+	askNovaDefaultModelId,
+	askNovaModels,
+	askNvidiaDefaultModelId,
+	askNvidiaModels,
 	askSageDefaultModelId,
 	askSageModels,
 	basetenDefaultModelId,
@@ -504,6 +514,16 @@ export function normalizeApiConfiguration(
 						? nousResearchModels[nousResearchModelId as keyof typeof nousResearchModels]
 						: nousResearchModels[nousResearchDefaultModelId],
 			}
+		case "ask-helmsman":
+			return getProviderData(askHelmsmanModels, askHelmsmanDefaultModelId)
+		case "ask-nvidia":
+			return getProviderData(askNvidiaModels, askNvidiaDefaultModelId)
+		case "ask-claude":
+			return getProviderData(askClaudeModels, askClaudeDefaultModelId)
+		case "ask-gemini":
+			return getProviderData(askGeminiModels, askGeminiDefaultModelId)
+		case "ask-nova":
+			return getProviderData(askNovaModels, askNovaDefaultModelId)
 		default:
 			return getProviderData(anthropicModels, anthropicDefaultModelId)
 	}

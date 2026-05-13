@@ -42,6 +42,7 @@ import { OpenAICompatibleProvider } from "./providers/OpenAICompatible"
 import { OpenAINativeProvider } from "./providers/OpenAINative"
 import { OpenAiCodexProvider } from "./providers/OpenAiCodexProvider"
 import { OpenRouterProvider } from "./providers/OpenRouterProvider"
+import { PeriscopeProvider } from "./providers/PeriscopeProvider"
 import { QwenCodeProvider } from "./providers/QwenCodeProvider"
 import { QwenProvider } from "./providers/QwenProvider"
 import { RequestyProvider } from "./providers/RequestyProvider"
@@ -358,6 +359,20 @@ const ApiOptions = ({
 			{apiConfiguration && selectedProvider === "hicap" && (
 				<HicapProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
 			)}
+
+			{apiConfiguration &&
+				(selectedProvider === "ask-helmsman" ||
+					selectedProvider === "ask-nvidia" ||
+					selectedProvider === "ask-claude" ||
+					selectedProvider === "ask-gemini" ||
+					selectedProvider === "ask-nova") && (
+					<PeriscopeProvider
+						currentMode={currentMode}
+						isPopup={isPopup}
+						provider={selectedProvider}
+						showModelOptions={showModelOptions}
+					/>
+				)}
 
 			{apiConfiguration && selectedProvider === "cline" && (
 				<ClineProvider

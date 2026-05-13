@@ -1,6 +1,26 @@
 {
 	"list": [
 		{
+			"value": "ask-helmsman",
+			"label": "Helmsman (auto-route)"
+		},
+		{
+			"value": "ask-nvidia",
+			"label": "NVIDIA (fast/balanced/code)"
+		},
+		{
+			"value": "ask-claude",
+			"label": "Claude Max (subscription)"
+		},
+		{
+			"value": "ask-gemini",
+			"label": "Gemini (subscription)"
+		},
+		{
+			"value": "ask-nova",
+			"label": "Nova (Bedrock Anthropic)"
+		},
+		{
 			"value": "cline",
 			"label": "Cline"
 		},
