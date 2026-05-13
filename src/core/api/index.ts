@@ -5,6 +5,10 @@ import { Logger } from "@/shared/services/Logger"
 import { ClineTool } from "@/shared/tools"
 import { AIhubmixHandler } from "./providers/aihubmix"
 import { AnthropicHandler } from "./providers/anthropic"
+import { AskClaudeHandler } from "./providers/ask-claude"
+import { AskGeminiHandler } from "./providers/ask-gemini"
+import { AskNovaHandler } from "./providers/ask-nova"
+import { AskNvidiaHandler } from "./providers/ask-nvidia"
 import { AskSageHandler } from "./providers/asksage"
 import { BasetenHandler } from "./providers/baseten"
 import { AwsBedrockHandler } from "./providers/bedrock"
@@ -368,6 +372,27 @@ function createHandlerForProvider(
 				reasoningEffort: mode === "plan" ? options.planModeReasoningEffort : options.actModeReasoningEffort,
 				deploymentId: mode === "plan" ? options.planModeSapAiCoreDeploymentId : options.actModeSapAiCoreDeploymentId,
 				sapAiCoreUseOrchestrationMode: options.sapAiCoreUseOrchestrationMode,
+			})
+		case "ask-claude":
+			return new AskClaudeHandler({
+				onRetryAttempt: options.onRetryAttempt,
+				claudeCodePath: options.claudeCodePath,
+				apiModelId: mode === "plan" ? options.planModeApiModelId : options.actModeApiModelId,
+			})
+		case "ask-nvidia":
+			return new AskNvidiaHandler({
+				onRetryAttempt: options.onRetryAttempt,
+				apiModelId: mode === "plan" ? options.planModeApiModelId : options.actModeApiModelId,
+			})
+		case "ask-gemini":
+			return new AskGeminiHandler({
+				onRetryAttempt: options.onRetryAttempt,
+				apiModelId: mode === "plan" ? options.planModeApiModelId : options.actModeApiModelId,
+			})
+		case "ask-nova":
+			return new AskNovaHandler({
+				onRetryAttempt: options.onRetryAttempt,
+				apiModelId: mode === "plan" ? options.planModeApiModelId : options.actModeApiModelId,
 			})
 		case "claude-code":
 			return new ClaudeCodeHandler({

@@ -44,6 +44,10 @@ export type ApiProvider =
 	| "hicap"
 	| "nousResearch"
 	| "wandb"
+	| "ask-claude"
+	| "ask-nvidia"
+	| "ask-gemini"
+	| "ask-nova"
 
 export const DEFAULT_API_PROVIDER = "openrouter" as ApiProvider
 
@@ -505,6 +509,120 @@ export const claudeCodeModels = {
 	"claude-3-5-haiku-20241022": {
 		...anthropicModels["claude-3-5-haiku-20241022"],
 		supportsImages: true,
+		supportsPromptCache: false,
+	},
+} as const satisfies Record<string, ModelInfo>
+
+// Periscope — ask-claude provider (Claude Max subscription CLI)
+export type AskClaudeModelId = keyof typeof askClaudeModels
+export const askClaudeDefaultModelId: AskClaudeModelId = "sonnet"
+export const askClaudeModels = {
+	sonnet: {
+		...anthropicModels["claude-sonnet-4-6"],
+		supportsImages: false,
+		supportsPromptCache: false,
+	},
+	haiku: {
+		...anthropicModels["claude-haiku-4-5-20251001"],
+		supportsImages: false,
+		supportsPromptCache: false,
+	},
+	opus: {
+		...anthropicModels["claude-opus-4-7"],
+		contextWindow: 200_000,
+		supportsImages: false,
+		supportsPromptCache: false,
+	},
+} as const satisfies Record<string, ModelInfo>
+
+// Periscope — ask-nvidia provider (NVIDIA API, OpenAI-compat, streaming)
+export type AskNvidiaModelId = keyof typeof askNvidiaModels
+export const askNvidiaDefaultModelId: AskNvidiaModelId = "balanced"
+export const askNvidiaModels = {
+	fast: {
+		maxTokens: 4096,
+		contextWindow: 128_000,
+		supportsImages: false,
+		supportsPromptCache: false,
+		inputPrice: 0,
+		outputPrice: 0,
+		description: "meta/llama-3.2-3b-instruct — fast lane",
+	},
+	balanced: {
+		maxTokens: 4096,
+		contextWindow: 128_000,
+		supportsImages: false,
+		supportsPromptCache: false,
+		inputPrice: 0,
+		outputPrice: 0,
+		description: "meta/llama-3.3-70b-instruct — balanced lane (default)",
+	},
+	large: {
+		maxTokens: 4096,
+		contextWindow: 128_000,
+		supportsImages: false,
+		supportsPromptCache: false,
+		inputPrice: 0,
+		outputPrice: 0,
+		description: "qwen/qwen3-next-80b-a3b-instruct — large lane",
+	},
+	code: {
+		maxTokens: 4096,
+		contextWindow: 128_000,
+		supportsImages: false,
+		supportsPromptCache: false,
+		inputPrice: 0,
+		outputPrice: 0,
+		description: "qwen/qwen3-coder-480b-a35b-instruct — code lane",
+	},
+	thinking: {
+		maxTokens: 4096,
+		contextWindow: 128_000,
+		supportsImages: false,
+		supportsPromptCache: false,
+		supportsReasoning: true,
+		inputPrice: 0,
+		outputPrice: 0,
+		description: "qwen/qwen3-next-80b-a3b-thinking — thinking lane",
+	},
+} as const satisfies Record<string, ModelInfo>
+
+// Periscope — ask-gemini provider (Google One subscription CLI)
+export type AskGeminiModelId = keyof typeof askGeminiModels
+export const askGeminiDefaultModelId: AskGeminiModelId = "pro"
+export const askGeminiModels = {
+	pro: {
+		maxTokens: 8192,
+		contextWindow: 1_000_000,
+		supportsImages: false,
+		supportsPromptCache: false,
+		inputPrice: 0,
+		outputPrice: 0,
+		description: "gemini-2.5-pro — Google One subscription",
+	},
+	flash: {
+		maxTokens: 8192,
+		contextWindow: 1_000_000,
+		supportsImages: false,
+		supportsPromptCache: false,
+		inputPrice: 0,
+		outputPrice: 0,
+		description: "gemini-2.5-flash — Google One subscription (fast fallback)",
+	},
+} as const satisfies Record<string, ModelInfo>
+
+// Periscope — ask-nova provider (AWS Bedrock Anthropic via ask_claude_bedrock CLI)
+export type AskNovaModelId = keyof typeof askNovaModels
+export const askNovaDefaultModelId: AskNovaModelId = "sonnet"
+export const askNovaModels = {
+	sonnet: {
+		...anthropicModels["claude-sonnet-4-5-20250929"],
+		supportsImages: false,
+		supportsPromptCache: false,
+	},
+	haiku: {
+		...anthropicModels["claude-haiku-4-5-20251001"],
+		supportsImages: false,
 		supportsPromptCache: false,
 	},
 } as const satisfies Record<string, ModelInfo>
