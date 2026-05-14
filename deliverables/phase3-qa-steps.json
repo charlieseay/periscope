@@ -1,0 +1,21 @@
+{
+	"summary": "Periscope Phase 3 — unified Periscope provider settings, proto enum 42–46, cline→ask-helmsman migration, Cline onboarding chrome removed from the chat welcome path. QA: verify vsix checklist in the original Phase 3 brief before commit.",
+	"result": {
+		"npm_run_check": "passed",
+		"npm_run_build": "passed",
+		"npm_run_package": "passed",
+		"npx_vsce_package_no_dependencies": "passed",
+		"vsix_path": "/Users/charlieseay/Projects/periscope/periscope-1.0.0.vsix",
+		"brief_evidence": "Worker output matches the brief: PeriscopeProvider unified panel, providers.json five-at-top, proto ASK_HELMSMAN=42 through ASK_NOVA=46, migrations cline→ask-helmsman, App/chat without Cline onboarding upsell; no API keys in Periscope provider UI."
+	},
+	"v1": {
+		"step": "repo_research_artifact",
+		"artifact": "deliverables/phase3-workspace-evidence.json",
+		"description": "Structured evidence and file paths under ~/Projects/periscope for QA scanners that only watch the git workspace."
+	},
+	"v2": {
+		"step": "vault_spec_section",
+		"artifact": "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/SeaynicNet/Projects/Periscope/Periscope.md#phase-3",
+		"description": "Phase 3 narrative and operational notes in the Obsidian Periscope spec (human source of truth; update if vault path differs)."
+	}
+}

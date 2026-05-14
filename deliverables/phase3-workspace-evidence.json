@@ -1,0 +1,24 @@
+{
+	"phase": 3,
+	"brief_alignment": [
+		"PeriscopeProvider.tsx — unified settings for five Periscope providers (description + model dropdown, no API key fields)",
+		"providers.json — five Periscope providers listed first; legacy Cline API provider entry removed from picker list",
+		"proto/cline/models.proto — ApiProvider ASK_HELMSMAN=42 … ASK_NOVA=46",
+		"Registration chain: src/shared/proto/cline/models.ts, api-configuration-conversion.ts, webview-ui providerUtils, src/shared/api.ts",
+		"state-migrations.ts — migrateClineProviderToAskHelmsman; extension activation runs it idempotently",
+		"App.tsx / chat shell — no OnboardingView; ChatView welcome path stripped of Cline-hosted quick wins and Cline mascot header"
+	],
+	"key_paths": [
+		"webview-ui/src/components/settings/providers/PeriscopeProvider.tsx",
+		"webview-ui/src/components/settings/ApiOptions.tsx",
+		"src/shared/providers/providers.json",
+		"proto/cline/models.proto",
+		"src/shared/proto-conversions/models/api-configuration-conversion.ts",
+		"src/core/storage/state-migrations.ts",
+		"src/extension.ts",
+		"webview-ui/src/App.tsx",
+		"webview-ui/src/components/chat/ChatView.tsx",
+		"webview-ui/src/components/welcome/HomeHeader.tsx",
+		"package.json (npm run build → package alias for verification checklist)"
+	]
+}
