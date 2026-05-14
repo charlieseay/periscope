@@ -280,9 +280,6 @@ async function ensureUserInOrgWithRemoteConfig(controller: Controller): Promise<
  * @param controller The controller instance
  */
 export async function fetchRemoteConfig(controller: Controller) {
-	try {
-		await ensureUserInOrgWithRemoteConfig(controller)
-	} catch (error) {
-		Logger.error("Failed to fetch remote config", error)
-	}
+	// Periscope uses local Helmsman routing — Cline remote config is disabled
+	return
 }

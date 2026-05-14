@@ -5,11 +5,11 @@ import { getEnvironmentColor } from "../utils/environmentColors"
 /**
  * ClineLogoTired component renders the sleepy Cline logo for "Lazy Teammate Mode".
  *
- * Based on the sleepy-cline.svg asset. Features droopy half-closed eyes and a
+ * Based on the sleepy-periscope.svg asset. Features droopy half-closed eyes and a
  * small sleepy mouth, giving the bot a tired/lazy appearance.
  *
  * @param {SVGProps<SVGSVGElement> & { environment?: Environment }} props - Standard SVG props plus optional environment
- * @returns {JSX.Element} SVG Cline logo with sleepy/tired expression
+ * @returns {JSX.Element} SVG Periscope logo with sleepy/tired expression
  */
 const ClineLogoTired = (props: SVGProps<SVGSVGElement> & { environment?: Environment }) => {
 	const { environment, ...svgProps } = props

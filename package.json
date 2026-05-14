@@ -54,7 +54,7 @@
 			"periscope-icon": {
 				"description": "periscope",
 				"default": {
-					"fontPath": "assets/icons/cline-bot.woff",
+					"fontPath": "assets/icons/periscope-icon.woff",
 					"fontCharacter": "\\e900"
 				}
 			}

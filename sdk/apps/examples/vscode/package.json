@@ -25,7 +25,7 @@
 			"activitybar": [
 				{
 					"id": "cline",
-					"title": "Cline",
+					"title": "Periscope",
 					"icon": "src/webview/public/icon.svg"
 				}
 			]
