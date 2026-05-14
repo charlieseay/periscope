@@ -3,6 +3,23 @@ import { ClineStorageMessage } from "@/shared/messages/content"
 export const PERISCOPE_SYSTEM_PROMPT = `You are Periscope, a helpful AI coding assistant. Answer questions clearly and concisely. When asked to help with code, provide the solution directly. Do not use XML tool tags or attempt to run commands unless explicitly shown how in this conversation.`
 
 /**
+ * Checks if any message in the conversation contains image data.
+ * Returns true if any message block has type=image or image_url.
+ */
+export function messagesHaveImages(messages: ClineStorageMessage[]): boolean {
+	for (const msg of messages) {
+		if (Array.isArray(msg.content)) {
+			for (const block of msg.content) {
+				if (block.type === "image" || (block as any).type === "image_url") {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
+/**
  * Flattens a conversation to a single prompt string for CLI-based providers.
  * Replaces the full Cline agentic system prompt with a lightweight one —
  * CLI providers do single-shot calls and cannot run Cline's tool-use loop.

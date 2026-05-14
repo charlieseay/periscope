@@ -5,7 +5,7 @@ import { Logger } from "@/shared/services/Logger"
 import { type ApiHandler, CommonApiHandlerOptions } from ".."
 import { withRetry } from "../retry"
 import { type ApiStream, ApiStreamUsageChunk } from "../transform/stream"
-import { flattenToPrompt } from "./periscope-utils"
+import { flattenToPrompt, messagesHaveImages } from "./periscope-utils"
 
 const ASK_HELMSMAN_BIN = `${process.env.HOME}/.local/bin/ask_helmsman`
 
@@ -29,6 +29,14 @@ export class AskHelmsmanHandler implements ApiHandler {
 	@withRetry({ maxRetries: 2, baseDelay: 2000, maxDelay: 10000 })
 	async *createMessage(systemPrompt: string, messages: ClineStorageMessage[]): ApiStream {
 		const model = this.getModel()
+
+		// Vision fallback: if messages contain images, bypass CLI and call proxy directly
+		if (messagesHaveImages(messages)) {
+			Logger.info(`[AskHelmsmanHandler] vision mode detected, routing to localhost:5681`)
+			yield* this.createVisionMessage(systemPrompt, messages)
+			return
+		}
+
 		const prompt = flattenToPrompt(systemPrompt, messages)
 
 		// --route maps to the 4 Helmsman routes: nvidia / web / writing / code
@@ -58,6 +66,60 @@ export class AskHelmsmanHandler implements ApiHandler {
 		const text = result.stdout.trim()
 		if (!text) {
 			throw new Error("[AskHelmsmanHandler] ask_helmsman returned empty response")
+		}
+
+		yield { type: "text", text }
+		yield usage
+	}
+
+	/**
+	 * Vision fallback: POST directly to the AI proxy at localhost:5681
+	 * with the full message array including image blocks.
+	 */
+	private async *createVisionMessage(systemPrompt: string, messages: ClineStorageMessage[]): ApiStream {
+		const usage: ApiStreamUsageChunk = {
+			type: "usage",
+			inputTokens: 0,
+			outputTokens: 0,
+			cacheReadTokens: 0,
+			cacheWriteTokens: 0,
+		}
+
+		// Build OpenAI-compatible messages array
+		const apiMessages = [
+			{ role: "system", content: systemPrompt },
+			...messages.map((msg) => ({
+				role: msg.role,
+				content: msg.content,
+			})),
+		]
+
+		const payload = {
+			model: "helmsman-vision",
+			messages: apiMessages,
+			max_tokens: 4096,
+		}
+
+		let response: Response
+		try {
+			response = await fetch("http://localhost:5681/v1/chat/completions", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(payload),
+			})
+		} catch (err: any) {
+			throw new Error(`[AskHelmsmanHandler] vision proxy fetch failed: ${err.message ?? err}`)
+		}
+
+		if (!response.ok) {
+			const errorText = await response.text()
+			throw new Error(`[AskHelmsmanHandler] vision proxy returned ${response.status}: ${errorText}`)
+		}
+
+		const data = await response.json()
+		const text = data.choices?.[0]?.message?.content?.trim()
+		if (!text) {
+			throw new Error("[AskHelmsmanHandler] vision proxy returned empty response")
 		}
 
 		yield { type: "text", text }
