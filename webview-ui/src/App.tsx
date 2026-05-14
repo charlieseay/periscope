@@ -16,12 +16,10 @@ const AppContent = () => {
 		settingsTargetSection,
 		showHistory,
 		showWorktrees,
-		showAnnouncement,
 		hideSettings,
 		hideHistory,
 		hideWorktrees,
 		closeMcpView,
-		hideAnnouncement,
 		navigateToHistory,
 	} = useExtensionState()
 
@@ -42,12 +40,7 @@ const AppContent = () => {
 			{showHistory && <HistoryView onDone={hideHistory} />}
 			{showMcp && <McpView initialTab={mcpTab} onDone={closeMcpView} />}
 			{showWorktrees && <WorktreesView onDone={hideWorktrees} />}
-			<ChatView
-				hideAnnouncement={hideAnnouncement}
-				isHidden={showSettings || showHistory || showMcp || showWorktrees}
-				showAnnouncement={showAnnouncement}
-				showHistoryView={navigateToHistory}
-			/>
+			<ChatView isHidden={showSettings || showHistory || showMcp || showWorktrees} showHistoryView={navigateToHistory} />
 		</div>
 	)
 }

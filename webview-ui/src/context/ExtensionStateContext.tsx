@@ -377,19 +377,12 @@ export const ExtensionStateContextProvider: React.FC<{
 									: prevState.autoApprovalSettings,
 							}
 
-							// Update welcome screen state based on API configuration if welcome view not in progress
-							if (!newState.welcomeViewCompleted && !showWelcome) {
-								setShowWelcome(true)
-								setOnboardingModels(newState.onboardingModels)
-							} else if (newState.welcomeViewCompleted) {
-								setShowWelcome(false)
-								setOnboardingModels(undefined)
-							}
-
-							setDidHydrateState(true)
-
 							return newState
 						})
+						setDidHydrateState(true)
+						// Periscope: never surface Cline account onboarding in the webview overlay
+						setShowWelcome(false)
+						setOnboardingModels(undefined)
 					} catch (error) {
 						console.error("Error parsing state JSON:", error)
 						console.log("[DEBUG] ERR getting state", error)

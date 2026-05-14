@@ -154,6 +154,16 @@ export function getModelsForProvider(
 			return huggingFaceModels
 		case "nousResearch":
 			return nousResearchModels
+		case "ask-helmsman":
+			return askHelmsmanModels
+		case "ask-nvidia":
+			return askNvidiaModels
+		case "ask-claude":
+			return askClaudeModels
+		case "ask-gemini":
+			return askGeminiModels
+		case "ask-nova":
+			return askNovaModels
 		case "litellm":
 			return dynamicModels?.liteLlmModels
 		// Providers with dynamic models - return undefined
@@ -191,8 +201,10 @@ export function normalizeApiConfiguration(
 	apiConfiguration: ApiConfiguration | undefined,
 	currentMode: Mode,
 ): NormalizedApiConfig {
-	const provider =
+	const rawProvider =
 		(currentMode === "plan" ? apiConfiguration?.planModeApiProvider : apiConfiguration?.actModeApiProvider) || "anthropic"
+	// Legacy "cline" was removed from Periscope; treat as Helmsman until storage migration runs
+	const provider: ApiProvider = rawProvider === "cline" ? "ask-helmsman" : rawProvider
 
 	const modelId = currentMode === "plan" ? apiConfiguration?.planModeApiModelId : apiConfiguration?.actModeApiModelId
 
@@ -282,26 +294,6 @@ export function normalizeApiConfiguration(
 				selectedProvider: provider,
 				selectedModelId: requestyModelId || requestyDefaultModelId,
 				selectedModelInfo: requestyModelInfo || requestyDefaultModelInfo,
-			}
-		case "cline":
-			const fallbackOpenRouterModelId =
-				currentMode === "plan" ? apiConfiguration?.planModeOpenRouterModelId : apiConfiguration?.actModeOpenRouterModelId
-			const fallbackOpenRouterModelInfo =
-				currentMode === "plan"
-					? apiConfiguration?.planModeOpenRouterModelInfo
-					: apiConfiguration?.actModeOpenRouterModelInfo
-			const clineModelId =
-				(currentMode === "plan" ? apiConfiguration?.planModeClineModelId : apiConfiguration?.actModeClineModelId) ||
-				fallbackOpenRouterModelId ||
-				openRouterDefaultModelId
-			const clineModelInfo =
-				(currentMode === "plan" ? apiConfiguration?.planModeClineModelInfo : apiConfiguration?.actModeClineModelInfo) ||
-				fallbackOpenRouterModelInfo ||
-				openRouterDefaultModelInfo
-			return {
-				selectedProvider: provider,
-				selectedModelId: clineModelId,
-				selectedModelInfo: clineModelInfo,
 			}
 		case "openai":
 			const openAiModelId =
@@ -839,6 +831,15 @@ export async function syncModeConfigurations(
 			updates.actModeAihubmixModelInfo = sourceFields.aihubmixModelInfo
 			break
 
+		case "ask-helmsman":
+		case "ask-nvidia":
+		case "ask-claude":
+		case "ask-gemini":
+		case "ask-nova":
+			updates.planModeApiModelId = sourceFields.apiModelId
+			updates.actModeApiModelId = sourceFields.apiModelId
+			break
+
 		// Providers that use apiProvider + apiModelId fields
 		case "anthropic":
 		case "claude-code":
@@ -957,6 +958,16 @@ export const getProviderInfo = (
 					effectiveMode === "plan" ? apiConfiguration.planModeAihubmixModelId : apiConfiguration.actModeAihubmixModelId,
 				baseUrl: apiConfiguration.aihubmixBaseUrl,
 				helpText: "Add your AIHubMix API key in settings",
+			}
+		case "ask-helmsman":
+		case "ask-nvidia":
+		case "ask-claude":
+		case "ask-gemini":
+		case "ask-nova":
+			return {
+				modelId: undefined,
+				baseUrl: undefined,
+				helpText: "No API keys in Periscope — credentials are read from your local environment.",
 			}
 		default:
 			return {

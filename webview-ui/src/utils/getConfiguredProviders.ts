@@ -2,6 +2,9 @@ import type { ApiConfiguration, ApiProvider } from "@shared/api"
 import PROVIDERS from "@shared/providers/providers.json"
 import type { RemoteConfigFields } from "@shared/storage/state-keys"
 
+/** Periscope built-in providers — no API keys in the settings UI; always selectable. */
+const PERISCOPE_PROVIDERS: ApiProvider[] = ["ask-helmsman", "ask-nvidia", "ask-claude", "ask-gemini", "ask-nova"]
+
 /**
  * Returns a list of API providers that are configured (have required credentials/settings)
  * Based on validation logic from validate.ts
@@ -14,14 +17,11 @@ export function getConfiguredProviders(
 		return remoteConfig.remoteConfiguredProviders
 	}
 
-	const configured: ApiProvider[] = []
+	const configured: ApiProvider[] = [...PERISCOPE_PROVIDERS]
 
 	if (!apiConfiguration) {
-		return ["cline"] // Cline is always available
+		return configured
 	}
-
-	// Cline - always available (uses account-based auth)
-	configured.push("cline")
 
 	// Anthropic - requires API key
 	if (apiConfiguration.apiKey) {

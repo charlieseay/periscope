@@ -645,6 +645,21 @@ export async function migrateWelcomeViewCompleted(context: vscode.ExtensionConte
 	}
 }
 
+export async function migrateClineProviderToAskHelmsman(context: vscode.ExtensionContext) {
+	try {
+		const keys = ["planModeApiProvider", "actModeApiProvider", "apiProvider"] as const
+		for (const key of keys) {
+			const v = await context.globalState.get(key)
+			if (v === "cline") {
+				await context.globalState.update(key, "ask-helmsman")
+				Logger.log(`[Storage Migration] ${key}: migrated provider cline → ask-helmsman`)
+			}
+		}
+	} catch (error) {
+		Logger.error("Failed to migrate cline provider to ask-helmsman:", error)
+	}
+}
+
 export async function cleanupMcpMarketplaceCatalogFromGlobalState(context: vscode.ExtensionContext) {
 	try {
 		// Check if mcpMarketplaceCatalog exists in global state

@@ -32,6 +32,7 @@ import { HookDiscoveryCache } from "./core/hooks/HookDiscoveryCache"
 import {
 	cleanupMcpMarketplaceCatalogFromGlobalState,
 	cleanupOldApiKey,
+	migrateClineProviderToAskHelmsman,
 	migrateCustomInstructionsToGlobalRules,
 	migrateTaskHistoryToFile,
 	migrateWelcomeViewCompleted,
@@ -71,6 +72,9 @@ export async function activate(context: vscode.ExtensionContext) {
 	// Moves workspace→global keys, task history→file, custom instructions→rules, etc.
 	// Must run BEFORE the file export so we copy clean state.
 	await cleanupLegacyVSCodeStorage(context)
+
+	// Idempotent: runs every activation so cline → ask-helmsman applies even after one-time VS Code storage migrations
+	await migrateClineProviderToAskHelmsman(context)
 
 	// 3. One-time export of VSCode's native storage to shared file-backed stores.
 	// After this, all platforms (VSCode, CLI, JetBrains) read from ~/.cline/data/.

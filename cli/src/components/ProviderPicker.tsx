@@ -17,6 +17,12 @@ export { getProviderLabel }
  */
 function isProviderConfigured(providerId: string, config: ApiConfiguration): boolean {
 	switch (providerId) {
+		case "ask-helmsman":
+		case "ask-nvidia":
+		case "ask-claude":
+		case "ask-gemini":
+		case "ask-nova":
+			return true
 		case "cline":
 			// Check if user has Cline API key or Cline account auth data stored
 			return !!(config.clineApiKey ?? config["cline:clineAccountId"])
