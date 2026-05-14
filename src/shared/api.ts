@@ -675,7 +675,7 @@ export const askNovaModels = {
 export type BedrockModelId = keyof typeof bedrockModels
 export const bedrockDefaultModelId: BedrockModelId = "anthropic.claude-sonnet-4-5-20250929-v1:0"
 export const bedrockModels = {
-	"anthropic.claude-sonnet-4-6": {
+	"anthropic.claude-sonnet-4-6-20250514-v1:0": {
 		maxTokens: 64_000,
 		contextWindow: 200_000,
 		supportsImages: true,
@@ -687,7 +687,7 @@ export const bedrockModels = {
 		cacheWritesPrice: 3.75,
 		cacheReadsPrice: 0.3,
 	},
-	"anthropic.claude-sonnet-4-6:1m": {
+	"anthropic.claude-sonnet-4-6-20250514-v1:0:1m": {
 		maxTokens: 64_000,
 		contextWindow: 1_000_000,
 		supportsImages: true,
