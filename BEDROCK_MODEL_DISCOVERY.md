@@ -115,12 +115,14 @@ Some models auto-enable on first use, others require explicit access requests.
 
 ## Rollout Plan
 1. ✅ Fix immediate Sonnet 4.6 model ID issue
-2. Add @aws-sdk/client-bedrock dependency
-3. Implement discovery service (read-only first)
-4. Add validation layer
-5. Implement auto-enablement
-6. Add UI indicators for model status
-7. Full rollout with monitoring
+2. ✅ Add @aws-sdk/client-bedrock dependency
+3. ✅ Implement discovery service (read-only first)
+4. ✅ Add validation layer
+5. ✅ Integrate with AwsBedrockHandler (static methods)
+6. ✅ Create test script for validation
+7. Implement auto-enablement
+8. Add UI indicators for model status
+9. Full rollout with monitoring
 
 ## Benefits
 - Always up-to-date with latest AWS models
