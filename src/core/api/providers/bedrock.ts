@@ -21,6 +21,7 @@ import type { ApiHandler, CommonApiHandlerOptions } from "../"
 import { withRetry } from "../retry"
 import { convertToR1Format } from "../transform/r1-format"
 import type { ApiStream } from "../transform/stream"
+import { bedrockModelDiscovery } from "./bedrock-model-discovery"
 
 export interface AwsBedrockHandlerOptions extends CommonApiHandlerOptions {
 	apiModelId?: string
@@ -152,6 +153,106 @@ export class AwsBedrockHandler implements ApiHandler {
 
 	constructor(options: AwsBedrockHandlerOptions) {
 		this.options = options
+	}
+
+	/**
+	 * Gets available Bedrock models for the given AWS credentials and region.
+	 * Uses the discovery service to query AWS and return only models that work.
+	 * 
+	 * @param options - AWS credentials and region configuration
+	 * @returns Promise resolving to array of available model IDs
+	 */
+	static async getAvailableModels(options: {
+		awsAccessKey?: string
+		awsSecretKey?: string
+		awsSessionToken?: string
+		awsRegion?: string
+		awsAuthentication?: string
+		awsProfile?: string
+		awsUseProfile?: boolean
+	}): Promise<string[]> {
+		try {
+			// Create a temporary handler instance to access credential methods
+			const tempHandler = new AwsBedrockHandler(options as AwsBedrockHandlerOptions)
+			const credentials = await tempHandler.getAwsCredentials()
+			const region = tempHandler.getRegion()
+
+			// Use the discovery service to get available models
+			const models = await bedrockModelDiscovery.getAvailableModels(
+				credentials.accessKeyId,
+				credentials.secretAccessKey,
+				region,
+				credentials.sessionToken
+			)
+
+			return models.map(m => m.modelId)
+		} catch (error) {
+			Logger.error("Failed to discover Bedrock models:", error)
+			// Return empty array on error - caller can fall back to static list
+			return []
+		}
+	}
+
+	/**
+	 * Validates that a specific model works with the given AWS credentials.
+	 * 
+	 * @param modelId - The Bedrock model ID to validate
+	 * @param options - AWS credentials and region configuration
+	 * @returns Promise resolving to validation result with capabilities
+	 */
+	static async validateModel(
+		modelId: string,
+		options: {
+			awsAccessKey?: string
+			awsSecretKey?: string
+			awsSessionToken?: string
+			awsRegion?: string
+			awsAuthentication?: string
+			awsProfile?: string
+			awsUseProfile?: boolean
+		}
+	): Promise<{
+		isValid: boolean
+		supportsToolUse?: boolean
+		supportsPromptCache?: boolean
+		error?: string
+	}> {
+		try {
+			// Create a temporary handler instance to access credential methods
+			const tempHandler = new AwsBedrockHandler(options as AwsBedrockHandlerOptions)
+			const credentials = await tempHandler.getAwsCredentials()
+			const region = tempHandler.getRegion()
+
+			// Use the discovery service to validate the model
+			const result = await bedrockModelDiscovery.validateModel(
+				modelId,
+				credentials.accessKeyId,
+				credentials.secretAccessKey,
+				region,
+				credentials.sessionToken
+			)
+
+			return {
+				isValid: result.isValid,
+				supportsToolUse: result.supportsToolUse,
+				supportsPromptCache: result.supportsPromptCache,
+				error: result.error
+			}
+		} catch (error) {
+			Logger.error(`Failed to validate Bedrock model ${modelId}:`, error)
+			return {
+				isValid: false,
+				error: error instanceof Error ? error.message : String(error)
+			}
+		}
+	}
+
+	/**
+	 * Clears the model discovery cache, forcing a fresh query on next request.
+	 * Useful when AWS credentials or permissions change.
+	 */
+	static clearModelCache(): void {
+		bedrockModelDiscovery.clearCache()
 	}
 
 	@withRetry({ maxRetries: 4 })
