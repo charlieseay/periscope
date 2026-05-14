@@ -10,7 +10,8 @@ export function messagesHaveImages(messages: ClineStorageMessage[]): boolean {
 	for (const msg of messages) {
 		if (Array.isArray(msg.content)) {
 			for (const block of msg.content) {
-				if (block.type === "image" || (block as any).type === "image_url") {
+				// Check for image blocks - Anthropic uses type="image"
+				if (block.type === "image") {
 					return true
 				}
 			}

@@ -1,20 +1,19 @@
 /**
  * AWS Bedrock Model Discovery Service
- * 
+ *
  * Dynamically discovers available Bedrock models, validates them, and handles auto-enablement.
  * This ensures users only see models that actually work in their AWS account/region.
  */
 
 import {
 	BedrockClient,
-	ListFoundationModelsCommand,
-	GetFoundationModelCommand,
-	type FoundationModelSummary,
 	type FoundationModelDetails,
+	type FoundationModelSummary,
+	GetFoundationModelCommand,
+	ListFoundationModelsCommand,
 } from "@aws-sdk/client-bedrock"
 import { BedrockRuntimeClient, ConverseCommand } from "@aws-sdk/client-bedrock-runtime"
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers"
-import type { ModelInfo } from "@shared/api"
 import { Logger } from "@/shared/services/Logger"
 
 interface DiscoveredModel {
@@ -139,13 +138,7 @@ export class BedrockModelDiscoveryService {
 		const startTime = Date.now()
 
 		try {
-			const client = this.createBedrockRuntimeClient(
-				region,
-				awsAccessKey,
-				awsSecretKey,
-				awsSessionToken,
-				awsProfile,
-			)
+			const client = this.createBedrockRuntimeClient(region, awsAccessKey, awsSecretKey, awsSessionToken, awsProfile)
 
 			// Test basic inference
 			const response = await client.send(

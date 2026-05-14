@@ -75,6 +75,7 @@ export class AskHelmsmanHandler implements ApiHandler {
 	/**
 	 * Vision fallback: POST directly to the AI proxy at localhost:5681
 	 * with the full message array including image blocks.
+	 * Falls back to CLI path (text-only) if proxy is unreachable.
 	 */
 	private async *createVisionMessage(systemPrompt: string, messages: ClineStorageMessage[]): ApiStream {
 		const usage: ApiStreamUsageChunk = {
@@ -85,30 +86,57 @@ export class AskHelmsmanHandler implements ApiHandler {
 			cacheWriteTokens: 0,
 		}
 
-		// Build OpenAI-compatible messages array
+		// Build OpenAI-compatible messages array, ensuring content is always an array
 		const apiMessages = [
 			{ role: "system", content: systemPrompt },
 			...messages.map((msg) => ({
 				role: msg.role,
-				content: msg.content,
+				content: Array.isArray(msg.content) ? msg.content : [{ type: "text", text: msg.content }],
 			})),
 		]
 
 		const payload = {
 			model: "helmsman-vision",
 			messages: apiMessages,
-			max_tokens: 4096,
 		}
 
 		let response: Response
 		try {
+			// Add 30s timeout to prevent hanging indefinitely
+			const controller = new AbortController()
+			const timeoutId = setTimeout(() => controller.abort(), 30000)
+
 			response = await fetch("http://localhost:5681/v1/chat/completions", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(payload),
+				signal: controller.signal,
 			})
+
+			clearTimeout(timeoutId)
 		} catch (err: any) {
-			throw new Error(`[AskHelmsmanHandler] vision proxy fetch failed: ${err.message ?? err}`)
+			// If proxy is down, fall back to CLI path (text-only)
+			Logger.info(`[AskHelmsmanHandler] vision proxy unavailable (${err.message}), falling back to CLI text-only path`)
+			const prompt = flattenToPrompt(systemPrompt, messages)
+			const model = this.getModel()
+			const routeFlag = routeForModel(model.id)
+			const args = routeFlag ? ["--route", routeFlag, prompt] : [prompt]
+
+			try {
+				const result = await execa(ASK_HELMSMAN_BIN, args, {
+					timeout: 180_000,
+					maxBuffer: 10_000_000,
+				})
+				const text = result.stdout.trim()
+				if (!text) {
+					throw new Error("[AskHelmsmanHandler] ask_helmsman returned empty response")
+				}
+				yield { type: "text", text }
+				yield usage
+				return
+			} catch (cliErr: any) {
+				throw new Error(`[AskHelmsmanHandler] vision proxy and CLI fallback both failed: ${cliErr.message ?? cliErr}`)
+			}
 		}
 
 		if (!response.ok) {
