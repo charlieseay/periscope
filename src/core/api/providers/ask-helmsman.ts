@@ -59,8 +59,8 @@ export class AskHelmsmanHandler implements ApiHandler {
 				timeout: 180_000,
 				maxBuffer: 10_000_000,
 			})
-		} catch (err: any) {
-			throw new Error(`[AskHelmsmanHandler] ask_helmsman failed: ${err.message ?? err}`)
+		} catch (err: unknown) {
+			throw new Error(`[AskHelmsmanHandler] ask_helmsman failed: ${err instanceof Error ? err.message : String(err)}`)
 		}
 
 		const text = result.stdout.trim()
@@ -114,9 +114,11 @@ export class AskHelmsmanHandler implements ApiHandler {
 			})
 
 			clearTimeout(timeoutId)
-		} catch (err: any) {
+		} catch (err: unknown) {
 			// If proxy is down, fall back to CLI path (text-only)
-			Logger.info(`[AskHelmsmanHandler] vision proxy unavailable (${err.message}), falling back to CLI text-only path`)
+			Logger.info(
+				`[AskHelmsmanHandler] vision proxy unavailable (${err instanceof Error ? err.message : String(err)}), falling back to CLI text-only path`,
+			)
 			const prompt = flattenToPrompt(systemPrompt, messages)
 			const model = this.getModel()
 			const routeFlag = routeForModel(model.id)
@@ -134,8 +136,10 @@ export class AskHelmsmanHandler implements ApiHandler {
 				yield { type: "text", text }
 				yield usage
 				return
-			} catch (cliErr: any) {
-				throw new Error(`[AskHelmsmanHandler] vision proxy and CLI fallback both failed: ${cliErr.message ?? cliErr}`)
+			} catch (cliErr: unknown) {
+				throw new Error(
+					`[AskHelmsmanHandler] vision proxy and CLI fallback both failed: ${cliErr instanceof Error ? cliErr.message : String(cliErr)}`,
+				)
 			}
 		}
 

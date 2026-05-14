@@ -10,7 +10,6 @@ export function messagesHaveImages(messages: ClineStorageMessage[]): boolean {
 	for (const msg of messages) {
 		if (Array.isArray(msg.content)) {
 			for (const block of msg.content) {
-				// Check for image blocks - Anthropic uses type="image"
 				if (block.type === "image") {
 					return true
 				}
@@ -25,7 +24,7 @@ export function messagesHaveImages(messages: ClineStorageMessage[]): boolean {
  * Replaces the full Cline agentic system prompt with a lightweight one —
  * CLI providers do single-shot calls and cannot run Cline's tool-use loop.
  */
-export function flattenToPrompt(systemPrompt: string, messages: ClineStorageMessage[]): string {
+export function flattenToPrompt(_systemPrompt: string, messages: ClineStorageMessage[]): string {
 	const parts: string[] = []
 
 	parts.push(`<system>\n${PERISCOPE_SYSTEM_PROMPT}\n</system>`)
