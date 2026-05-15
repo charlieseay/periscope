@@ -31,6 +31,8 @@ export interface ChatState {
 	setSelectedFiles: React.Dispatch<React.SetStateAction<string[]>>
 	sendingDisabled: boolean
 	setSendingDisabled: React.Dispatch<React.SetStateAction<boolean>>
+	showSendError: boolean
+	setSendError: React.Dispatch<React.SetStateAction<boolean>>
 	enableButtons: boolean
 	setEnableButtons: React.Dispatch<React.SetStateAction<boolean>>
 	primaryButtonText: string | undefined

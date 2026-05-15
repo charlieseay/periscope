@@ -30,6 +30,7 @@ export const InputSection: React.FC<InputSectionProps> = ({
 		inputValue,
 		setInputValue,
 		sendingDisabled,
+		showSendError,
 		selectedImages,
 		setSelectedImages,
 		selectedFiles,
@@ -72,6 +73,7 @@ export const InputSection: React.FC<InputSectionProps> = ({
 				setSelectedFiles={setSelectedFiles}
 				setSelectedImages={setSelectedImages}
 				shouldDisableFilesAndImages={shouldDisableFilesAndImages}
+				showSendError={showSendError}
 			/>
 		</>
 	)

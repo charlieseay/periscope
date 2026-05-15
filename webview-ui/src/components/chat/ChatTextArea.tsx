@@ -72,6 +72,7 @@ interface ChatTextAreaProps {
 	activeQuote: string | null
 	setInputValue: (value: string) => void
 	sendingDisabled: boolean
+	showSendError?: boolean
 	placeholderText: string
 	selectedFiles: string[]
 	selectedImages: string[]
@@ -199,6 +200,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			inputValue,
 			setInputValue,
 			sendingDisabled,
+			showSendError,
 			placeholderText,
 			selectedFiles,
 			selectedImages,
@@ -254,6 +256,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 		const unsupportedFileTimerRef = useRef<NodeJS.Timeout | null>(null)
 		const [showDimensionError, setShowDimensionError] = useState(false)
 		const dimensionErrorTimerRef = useRef<NodeJS.Timeout | null>(null)
+		const [isPastingImage, setIsPastingImage] = useState(false)
 
 		const [fileSearchResults, setFileSearchResults] = useState<SearchResult[]>([])
 		const [searchLoading, setSearchLoading] = useState(false)
@@ -878,50 +881,55 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				})
 				if (!shouldDisableFilesAndImages && imageItems.length > 0) {
 					e.preventDefault()
-					const imagePromises = imageItems.map((item) => {
-						return new Promise<string | null>((resolve) => {
-							const blob = item.getAsFile()
-							if (!blob) {
-								resolve(null)
-								return
-							}
-							const reader = new FileReader()
-							reader.onloadend = async () => {
-								if (reader.error) {
-									console.error("Error reading file:", reader.error)
+					setIsPastingImage(true)
+					try {
+						const imagePromises = imageItems.map((item) => {
+							return new Promise<string | null>((resolve) => {
+								const blob = item.getAsFile()
+								if (!blob) {
 									resolve(null)
-								} else {
-									const result = reader.result
-									if (typeof result === "string") {
-										try {
-											await getImageDimensions(result)
-											resolve(result)
-										} catch (error) {
-											console.warn((error as Error).message)
-											showDimensionErrorMessage()
+									return
+								}
+								const reader = new FileReader()
+								reader.onloadend = async () => {
+									if (reader.error) {
+										console.error("Error reading file:", reader.error)
+										resolve(null)
+									} else {
+										const result = reader.result
+										if (typeof result === "string") {
+											try {
+												await getImageDimensions(result)
+												resolve(result)
+											} catch (error) {
+												console.warn((error as Error).message)
+												showDimensionErrorMessage()
+												resolve(null)
+											}
+										} else {
 											resolve(null)
 										}
-									} else {
-										resolve(null)
 									}
 								}
-							}
-							reader.readAsDataURL(blob)
+								reader.readAsDataURL(blob)
+							})
 						})
-					})
-					const imageDataArray = await Promise.all(imagePromises)
-					const dataUrls = imageDataArray.filter((dataUrl): dataUrl is string => dataUrl !== null)
-					//.map((dataUrl) => dataUrl.split(",")[1]) // strip the mime type prefix, sharp doesn't need it
-					if (dataUrls.length > 0) {
-						const filesAndImagesLength = selectedImages.length + selectedFiles.length
-						const availableSlots = MAX_IMAGES_AND_FILES_PER_MESSAGE - filesAndImagesLength
+						const imageDataArray = await Promise.all(imagePromises)
+						const dataUrls = imageDataArray.filter((dataUrl): dataUrl is string => dataUrl !== null)
+						//.map((dataUrl) => dataUrl.split(",")[1]) // strip the mime type prefix, sharp doesn't need it
+						if (dataUrls.length > 0) {
+							const filesAndImagesLength = selectedImages.length + selectedFiles.length
+							const availableSlots = MAX_IMAGES_AND_FILES_PER_MESSAGE - filesAndImagesLength
 
-						if (availableSlots > 0) {
-							const imagesToAdd = Math.min(dataUrls.length, availableSlots)
-							setSelectedImages((prevImages) => [...prevImages, ...dataUrls.slice(0, imagesToAdd)])
+							if (availableSlots > 0) {
+								const imagesToAdd = Math.min(dataUrls.length, availableSlots)
+								setSelectedImages((prevImages) => [...prevImages, ...dataUrls.slice(0, imagesToAdd)])
+							}
+						} else {
+							console.warn("No valid images were processed")
 						}
-					} else {
-						console.warn("No valid images were processed")
+					} finally {
+						setIsPastingImage(false)
 					}
 				}
 			},
@@ -1018,24 +1026,29 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 
 		const onModeToggle = useCallback(() => {
 			void (async () => {
-				const convertedProtoMode = mode === "plan" ? PlanActMode.ACT : PlanActMode.PLAN
-				const response = await StateServiceClient.togglePlanActModeProto(
-					TogglePlanActModeRequest.create({
-						mode: convertedProtoMode,
-						chatContent: {
-							message: inputValue.trim() ? inputValue : undefined,
-							images: selectedImages,
-							files: selectedFiles,
-						},
-					}),
-				)
-				// Focus the textarea after mode toggle with slight delay
-				setTimeout(() => {
-					if (response.value) {
-						setInputValue("")
-					}
+				try {
+					const convertedProtoMode = mode === "plan" ? PlanActMode.ACT : PlanActMode.PLAN
+					const response = await StateServiceClient.togglePlanActModeProto(
+						TogglePlanActModeRequest.create({
+							mode: convertedProtoMode,
+							chatContent: {
+								message: inputValue.trim() ? inputValue : undefined,
+								images: selectedImages,
+								files: selectedFiles,
+							},
+						}),
+					)
+					// Focus the textarea after mode toggle with slight delay
+					setTimeout(() => {
+						if (response.value) {
+							setInputValue("")
+						}
+						textAreaRef.current?.focus()
+					}, 100)
+				} catch (err) {
+					console.error("[ChatTextArea] onModeToggle error:", err)
 					textAreaRef.current?.focus()
-				}, 100)
+				}
 			})()
 		}, [mode, inputValue, selectedImages, selectedFiles, setInputValue])
 
@@ -1378,6 +1391,16 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 					{showUnsupportedFileError && (
 						<div className="absolute inset-2.5 bg-[rgba(var(--vscode-errorForeground-rgb),0.1)] border-2 border-error rounded-xs flex items-center justify-center z-10 pointer-events-none">
 							<span className="text-error font-bold text-xs">Files other than images are currently disabled</span>
+						</div>
+					)}
+					{isPastingImage && (
+						<div className="absolute inset-2.5 bg-[rgba(var(--vscode-focusBorder-rgb),0.08)] border-2 border-[var(--vscode-focusBorder)] rounded-xs flex items-center justify-center z-10 pointer-events-none">
+							<span className="text-[var(--vscode-focusBorder)] font-bold text-xs">Processing image...</span>
+						</div>
+					)}
+					{showSendError && (
+						<div className="absolute inset-2.5 bg-[rgba(var(--vscode-errorForeground-rgb),0.1)] border-2 border-error rounded-xs flex items-center justify-center z-10 pointer-events-none">
+							<span className="text-error font-bold text-xs">Failed to send — check your connection</span>
 						</div>
 					)}
 					{showSlashCommandsMenu && (

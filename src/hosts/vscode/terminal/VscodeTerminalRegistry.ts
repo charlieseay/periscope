@@ -25,6 +25,7 @@ export class TerminalRegistry {
 			cwd,
 			name: "Cline",
 			iconPath: new vscode.ThemeIcon("cline-icon"),
+			hideFromUser: true,
 			env: {
 				CLINE_ACTIVE: "true",
 			},

@@ -16,6 +16,7 @@ export function useChatState(messages: ClineMessage[]): ChatState {
 
 	// UI state
 	const [sendingDisabled, setSendingDisabled] = useState(false)
+	const [showSendError, setSendError] = useState(false)
 	const [enableButtons, setEnableButtons] = useState<boolean>(false)
 	const [primaryButtonText, setPrimaryButtonText] = useState<string | undefined>("Approve")
 	const [secondaryButtonText, setSecondaryButtonText] = useState<string | undefined>("Reject")
@@ -67,6 +68,8 @@ export function useChatState(messages: ClineMessage[]): ChatState {
 		setSelectedFiles,
 		sendingDisabled,
 		setSendingDisabled,
+		showSendError,
+		setSendError,
 		enableButtons,
 		setEnableButtons,
 		primaryButtonText,

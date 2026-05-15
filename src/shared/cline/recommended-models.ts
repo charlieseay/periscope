@@ -16,8 +16,8 @@ export interface ClineRecommendedModelsData {
 export const CLINE_RECOMMENDED_MODELS_FALLBACK: ClineRecommendedModelsData = {
 	recommended: [
 		{
-			id: "google/gemini-3.1-pro-preview",
-			name: "Google Gemini 3.1 Pro Preview",
+			id: "google/gemini-2.5-pro-preview-05-06",
+			name: "Google Gemini 2.5 Pro Preview",
 			description: "Latest Gemini release with 1m ctx window and strong coding performance",
 			tags: ["NEW"],
 		},
@@ -34,10 +34,10 @@ export const CLINE_RECOMMENDED_MODELS_FALLBACK: ClineRecommendedModelsData = {
 			tags: ["BEST"],
 		},
 		{
-			id: "openai/gpt-5.3-codex",
-			name: "OpenAI GPT-5.3 Codex",
-			description: "OpenAI's latest with strong coding abilities",
-			tags: ["NEW"],
+			id: "openai/gpt-4o",
+			name: "OpenAI GPT-4o",
+			description: "OpenAI's flagship model with strong coding abilities",
+			tags: [],
 		},
 	],
 	free: [
