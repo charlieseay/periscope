@@ -39,6 +39,15 @@ export class AskHelmsmanHandler implements ApiHandler {
 
 		const prompt = flattenToPrompt(systemPrompt, messages)
 
+		// CLI args have limits and large prompts cause silent hangs. Bail early with a
+		// clear message so the user knows to switch to ask-claude for deep context tasks.
+		const MAX_PROMPT_CHARS = 80_000
+		if (prompt.length > MAX_PROMPT_CHARS) {
+			throw new Error(
+				`[AskHelmsmanHandler] Conversation too large for CLI provider (${prompt.length.toLocaleString()} chars > ${MAX_PROMPT_CHARS.toLocaleString()} limit). Switch to ask-claude or ask-nvidia provider for this task.`,
+			)
+		}
+
 		// --route maps to the 4 Helmsman routes: nvidia / web / writing / code
 		const routeFlag = routeForModel(model.id)
 		const args = routeFlag ? ["--route", routeFlag, prompt] : [prompt]

@@ -7,7 +7,6 @@ import { type ApiHandler, CommonApiHandlerOptions } from ".."
 import { withRetry } from "../retry"
 import { convertToOpenAiMessages } from "../transform/openai-format"
 import { type ApiStream, ApiStreamUsageChunk } from "../transform/stream"
-import { PERISCOPE_SYSTEM_PROMPT } from "./periscope-utils"
 
 const NVIDIA_API_BASE = "https://integrate.api.nvidia.com/v1"
 const NVIDIA_KEY_FILE = "/Volumes/data/secrets/nvidia_api_key"
@@ -47,7 +46,7 @@ export class AskNvidiaHandler implements ApiHandler {
 		const client = await this.getClient()
 
 		const openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
-			{ role: "system", content: PERISCOPE_SYSTEM_PROMPT },
+			{ role: "system", content: systemPrompt },
 			...convertToOpenAiMessages(messages),
 		]
 
@@ -66,7 +65,7 @@ export class AskNvidiaHandler implements ApiHandler {
 			messages: openAiMessages,
 			stream: true,
 			stream_options: { include_usage: true },
-			max_tokens: 4096,
+			max_tokens: 32768,
 		})
 
 		for await (const chunk of stream) {
