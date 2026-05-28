@@ -5,7 +5,13 @@ import { Logger } from "@/shared/services/Logger"
 import { type ApiHandler, CommonApiHandlerOptions } from ".."
 import { withRetry } from "../retry"
 import { type ApiStream, ApiStreamUsageChunk } from "../transform/stream"
-import { flattenToPrompt } from "./periscope-utils"
+import {
+	flattenToPrompt,
+	guardLargePrompt,
+	guardVisionCapability,
+	PERISCOPE_REQUEST_TIMEOUT_MS,
+	requirePeriscopeCli,
+} from "./periscope-utils"
 
 const ASK_GEMINI_BIN = `${process.env.HOME}/.local/bin/ask_gemini`
 
@@ -29,7 +35,9 @@ export class AskGeminiHandler implements ApiHandler {
 	@withRetry({ maxRetries: 2, baseDelay: 2000, maxDelay: 10000 })
 	async *createMessage(systemPrompt: string, messages: ClineStorageMessage[]): ApiStream {
 		const model = this.getModel()
+		guardVisionCapability(messages, "AskGeminiHandler", model.info.supportsImages ?? false)
 		const prompt = flattenToPrompt(systemPrompt, messages)
+		guardLargePrompt(prompt, "AskGeminiHandler", "ask-helmsman or ask-claude")
 
 		Logger.info(`[AskGeminiHandler] model=${model.id}, prompt_len=${prompt.length}`)
 
@@ -41,10 +49,12 @@ export class AskGeminiHandler implements ApiHandler {
 			cacheWriteTokens: 0,
 		}
 
+		await requirePeriscopeCli(ASK_GEMINI_BIN, "ask_gemini")
+
 		let result: { stdout: string; stderr: string }
 		try {
 			result = await execa(ASK_GEMINI_BIN, ["-p", prompt], {
-				timeout: 120_000,
+				timeout: PERISCOPE_REQUEST_TIMEOUT_MS,
 				maxBuffer: 10_000_000,
 			})
 		} catch (err: any) {

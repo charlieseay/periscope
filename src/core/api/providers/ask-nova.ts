@@ -5,7 +5,13 @@ import { Logger } from "@/shared/services/Logger"
 import { type ApiHandler, CommonApiHandlerOptions } from ".."
 import { withRetry } from "../retry"
 import { type ApiStream, ApiStreamUsageChunk } from "../transform/stream"
-import { flattenToPrompt } from "./periscope-utils"
+import {
+	flattenToPrompt,
+	guardLargePrompt,
+	guardVisionCapability,
+	PERISCOPE_REQUEST_TIMEOUT_MS,
+	requirePeriscopeCli,
+} from "./periscope-utils"
 
 const ASK_NOVA_BIN = `${process.env.HOME}/.local/bin/ask_claude_bedrock`
 
@@ -28,12 +34,14 @@ export class AskNovaHandler implements ApiHandler {
 	@withRetry({ maxRetries: 2, baseDelay: 2000, maxDelay: 10000 })
 	async *createMessage(systemPrompt: string, messages: ClineStorageMessage[]): ApiStream {
 		const model = this.getModel()
+		guardVisionCapability(messages, "AskNovaHandler", model.info.supportsImages ?? false)
 
 		// Map model ID to the lane flag expected by ask_claude_bedrock — registry-driven,
 		// not a hardcoded compare. Adding a new ask-nova model means adding both an
 		// askNovaModels entry and an askNovaLanes mapping.
 		const lane = askNovaLanes[model.id as AskNovaModelId] ?? askNovaLanes[askNovaDefaultModelId]
 		const prompt = flattenToPrompt(systemPrompt, messages)
+		guardLargePrompt(prompt, "AskNovaHandler", "ask-helmsman or ask-claude")
 
 		Logger.info(`[AskNovaHandler] lane=${lane}, prompt_len=${prompt.length}`)
 
@@ -45,10 +53,12 @@ export class AskNovaHandler implements ApiHandler {
 			cacheWriteTokens: 0,
 		}
 
+		await requirePeriscopeCli(ASK_NOVA_BIN, "ask_claude_bedrock")
+
 		let result: { stdout: string; stderr: string }
 		try {
 			result = await execa(ASK_NOVA_BIN, ["--lane", lane, "--json", prompt], {
-				timeout: 120_000,
+				timeout: PERISCOPE_REQUEST_TIMEOUT_MS,
 				maxBuffer: 10_000_000,
 			})
 		} catch (err: any) {

@@ -6,6 +6,7 @@ import { Logger } from "@/shared/services/Logger"
 import { type ApiHandler, CommonApiHandlerOptions } from ".."
 import { withRetry } from "../retry"
 import { type ApiStream, ApiStreamUsageChunk } from "../transform/stream"
+import { guardVisionCapability } from "./periscope-utils"
 
 interface AskClaudeHandlerOptions extends CommonApiHandlerOptions {
 	claudeCodePath?: string
@@ -32,8 +33,9 @@ export class AskClaudeHandler implements ApiHandler {
 		maxDelay: 10000,
 	})
 	async *createMessage(systemPrompt: string, messages: ClineStorageMessage[]): ApiStream {
-		const filteredMessages = filterMessagesForClaudeCode(messages)
 		const model = this.getModel()
+		guardVisionCapability(messages, "AskClaudeHandler", model.info.supportsImages ?? false)
+		const filteredMessages = filterMessagesForClaudeCode(messages)
 
 		Logger.info(`[AskClaudeHandler] routing to claude CLI, model=${model.id}`)
 

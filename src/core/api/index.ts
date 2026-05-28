@@ -79,6 +79,25 @@ export interface SingleCompletionHandler {
 	completePrompt(prompt: string): Promise<string>
 }
 
+/**
+ * Read a string value from VS Code workspace config under the "periscope"
+ * namespace. Used to thread per-workspace defaults (helmsman.defaultRoute,
+ * nvidia.defaultLane) into handler options when state hasn't set them.
+ * Noops cleanly when the vscode module isn't available (standalone build).
+ */
+function readPeriscopeConfigString(key: string, allowed: ReadonlyArray<string>): string | undefined {
+	try {
+		// biome-ignore lint/correctness/noNodejsModules: optional VS Code host detection
+		const vscode = require("vscode") as any
+		if (!vscode?.workspace?.getConfiguration) return undefined
+		const raw = vscode.workspace.getConfiguration("periscope").get(key) as string | undefined
+		if (raw && allowed.includes(raw)) return raw
+		return undefined
+	} catch {
+		return undefined
+	}
+}
+
 function createHandlerForProvider(
 	apiProvider: string | undefined,
 	options: Omit<ApiConfiguration, "apiProvider">,
@@ -388,15 +407,22 @@ function createHandlerForProvider(
 				}),
 				new AskHelmsmanHandler({ onRetryAttempt: options.onRetryAttempt }),
 			)
-		case "ask-nvidia":
+		case "ask-nvidia": {
 			// NVIDIA rate limit / API outage? fall back to Helmsman router.
+			// When apiModelId isn't set by the chat UI, fall through to
+			// periscope.nvidia.defaultLane from workspace config.
+			const explicitModelId = mode === "plan" ? options.planModeApiModelId : options.actModeApiModelId
+			const apiModelId =
+				explicitModelId ??
+				readPeriscopeConfigString("nvidia.defaultLane", ["fast", "balanced", "large", "code", "thinking"])
 			return new FallbackApiHandler(
 				new AskNvidiaHandler({
 					onRetryAttempt: options.onRetryAttempt,
-					apiModelId: mode === "plan" ? options.planModeApiModelId : options.actModeApiModelId,
+					apiModelId,
 				}),
 				new AskHelmsmanHandler({ onRetryAttempt: options.onRetryAttempt }),
 			)
+		}
 		case "ask-gemini":
 			// Google One quota exhausted? fall back to Helmsman router.
 			return new FallbackApiHandler(
@@ -414,19 +440,25 @@ function createHandlerForProvider(
 				}),
 				new AskHelmsmanHandler({ onRetryAttempt: options.onRetryAttempt }),
 			)
-		case "ask-helmsman":
+		case "ask-helmsman": {
 			// Helmsman ai-proxy down? fall back to ask_claude (Claude Max subscription
 			// is the last-resort because it's metered, but always available).
+			// When apiModelId isn't set, fall through to periscope.helmsman.defaultRoute
+			// from workspace config.
+			const explicitModelId = mode === "plan" ? options.planModeApiModelId : options.actModeApiModelId
+			const apiModelId =
+				explicitModelId ?? readPeriscopeConfigString("helmsman.defaultRoute", ["auto", "web", "writing", "code"])
 			return new FallbackApiHandler(
 				new AskHelmsmanHandler({
 					onRetryAttempt: options.onRetryAttempt,
-					apiModelId: mode === "plan" ? options.planModeApiModelId : options.actModeApiModelId,
+					apiModelId,
 				}),
 				new AskClaudeHandler({
 					onRetryAttempt: options.onRetryAttempt,
 					claudeCodePath: options.claudeCodePath,
 				}),
 			)
+		}
 		case "claude-code":
 			return new ClaudeCodeHandler({
 				onRetryAttempt: options.onRetryAttempt,

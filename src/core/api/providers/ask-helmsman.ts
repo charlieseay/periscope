@@ -5,7 +5,7 @@ import { Logger } from "@/shared/services/Logger"
 import { type ApiHandler, CommonApiHandlerOptions } from ".."
 import { withRetry } from "../retry"
 import { type ApiStream, ApiStreamUsageChunk } from "../transform/stream"
-import { flattenToPrompt, messagesHaveImages } from "./periscope-utils"
+import { flattenToPrompt, messagesHaveImages, PERISCOPE_REQUEST_TIMEOUT_MS, requirePeriscopeCli } from "./periscope-utils"
 
 const ASK_HELMSMAN_BIN = `${process.env.HOME}/.local/bin/ask_helmsman`
 
@@ -64,10 +64,12 @@ export class AskHelmsmanHandler implements ApiHandler {
 			cacheWriteTokens: 0,
 		}
 
+		await requirePeriscopeCli(ASK_HELMSMAN_BIN, "ask_helmsman")
+
 		let result: { stdout: string; stderr: string }
 		try {
 			result = await execa(ASK_HELMSMAN_BIN, args, {
-				timeout: 180_000,
+				timeout: PERISCOPE_REQUEST_TIMEOUT_MS,
 				maxBuffer: 10_000_000,
 			})
 		} catch (err: unknown) {
@@ -137,7 +139,7 @@ export class AskHelmsmanHandler implements ApiHandler {
 
 			try {
 				const result = await execa(ASK_HELMSMAN_BIN, args, {
-					timeout: 180_000,
+					timeout: PERISCOPE_REQUEST_TIMEOUT_MS,
 					maxBuffer: 10_000_000,
 				})
 				const text = result.stdout.trim()
