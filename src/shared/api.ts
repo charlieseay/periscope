@@ -541,7 +541,7 @@ export type AskNvidiaModelId = keyof typeof askNvidiaModels
 export const askNvidiaDefaultModelId: AskNvidiaModelId = "balanced"
 export const askNvidiaModels = {
 	fast: {
-		maxTokens: 4096,
+		maxTokens: 16000,
 		contextWindow: 128_000,
 		supportsImages: false,
 		supportsPromptCache: false,
@@ -550,7 +550,7 @@ export const askNvidiaModels = {
 		description: "meta/llama-3.2-3b-instruct — fast lane",
 	},
 	balanced: {
-		maxTokens: 4096,
+		maxTokens: 32000,
 		contextWindow: 128_000,
 		supportsImages: false,
 		supportsPromptCache: false,
@@ -559,7 +559,7 @@ export const askNvidiaModels = {
 		description: "meta/llama-3.3-70b-instruct — balanced lane (default)",
 	},
 	large: {
-		maxTokens: 4096,
+		maxTokens: 32000,
 		contextWindow: 128_000,
 		supportsImages: false,
 		supportsPromptCache: false,
@@ -568,7 +568,7 @@ export const askNvidiaModels = {
 		description: "qwen/qwen3-next-80b-a3b-instruct — large lane",
 	},
 	code: {
-		maxTokens: 4096,
+		maxTokens: 32000,
 		contextWindow: 128_000,
 		supportsImages: false,
 		supportsPromptCache: false,
@@ -577,7 +577,7 @@ export const askNvidiaModels = {
 		description: "qwen/qwen3-coder-480b-a35b-instruct — code lane",
 	},
 	thinking: {
-		maxTokens: 4096,
+		maxTokens: 32000,
 		contextWindow: 128_000,
 		supportsImages: false,
 		supportsPromptCache: false,
@@ -617,7 +617,7 @@ export type AskHelmsmanModelId = keyof typeof askHelmsmanModels
 export const askHelmsmanDefaultModelId: AskHelmsmanModelId = "auto"
 export const askHelmsmanModels = {
 	auto: {
-		maxTokens: 4096,
+		maxTokens: 32000,
 		contextWindow: 128_000,
 		supportsImages: false,
 		supportsPromptCache: false,
@@ -626,7 +626,7 @@ export const askHelmsmanModels = {
 		description: "Helmsman auto-routes: NVIDIA → ask_claude → ask_gemini → ask_nova",
 	},
 	web: {
-		maxTokens: 4096,
+		maxTokens: 32000,
 		contextWindow: 1_000_000,
 		supportsImages: false,
 		supportsPromptCache: false,
@@ -635,7 +635,7 @@ export const askHelmsmanModels = {
 		description: "Helmsman web route — forces Gemini (Google Search grounding)",
 	},
 	writing: {
-		maxTokens: 4096,
+		maxTokens: 32000,
 		contextWindow: 128_000,
 		supportsImages: false,
 		supportsPromptCache: false,
@@ -644,7 +644,7 @@ export const askHelmsmanModels = {
 		description: "Helmsman writing route — forces ask_claude (quality prose)",
 	},
 	code: {
-		maxTokens: 4096,
+		maxTokens: 32000,
 		contextWindow: 128_000,
 		supportsImages: false,
 		supportsPromptCache: false,
