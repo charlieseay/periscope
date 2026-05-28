@@ -924,8 +924,8 @@ describe("BannerService", () => {
 			})
 		})
 
-		it('should return "jetbrains" when ide is "Cline for JetBrains" (case-insensitive)', async () => {
-			stubHostInfo({ ide: "Cline for JetBrains" })
+		it('should return "jetbrains" when ide is "Periscope for JetBrains" (case-insensitive)', async () => {
+			stubHostInfo({ ide: "Periscope for JetBrains" })
 			mockFetch.resolves(createSuccessResponse(emptyResponse))
 
 			await mockFetchForTesting(mockFetch, async () => {
@@ -1003,7 +1003,7 @@ describe("BannerService", () => {
 		})
 
 		it("should prefer ide field over platform field for detection", async () => {
-			stubHostInfo({ ide: "Cline for JetBrains", platform: "Visual Studio Code 1.103.0" })
+			stubHostInfo({ ide: "Periscope for JetBrains", platform: "Visual Studio Code 1.103.0" })
 			mockFetch.resolves(createSuccessResponse(emptyResponse))
 
 			await mockFetchForTesting(mockFetch, async () => {

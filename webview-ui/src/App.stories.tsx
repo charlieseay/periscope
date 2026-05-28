@@ -763,7 +763,7 @@ export const ReportBug = quickStory(
 	"report_bug",
 	JSON.stringify({
 		steps_to_reproduce: "1. Open Cline\n2. Start a new task\n3. Observe the error",
-		what_happened: "Cline crashes unexpectedly",
+		what_happened: "Periscope crashes unexpectedly",
 	}),
 	"Shows utility action to report bugs to the GitHub repository.",
 )

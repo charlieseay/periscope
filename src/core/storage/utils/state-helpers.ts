@@ -17,6 +17,49 @@ import { ClineMemento } from "@/shared/storage"
 import { readTaskHistoryFromState } from "../disk"
 import { StateManager } from "../StateManager"
 
+// Recognised periscope provider IDs that can come from workspace config.
+// Used to validate `periscope.defaultProvider` before applying it — keeps a
+// typo in `.vscode/settings.json` from selecting a non-existent provider.
+const VALID_PERISCOPE_PROVIDERS: ReadonlyArray<ApiProvider> = [
+	"ask-helmsman",
+	"ask-nvidia",
+	"ask-claude",
+	"ask-gemini",
+	"ask-nova",
+	"bedrock",
+	"ollama",
+]
+
+/**
+ * Read `periscope.defaultProvider` from VS Code workspace config if available
+ * AND valid. Returns null when running outside a VS Code host (e.g., standalone
+ * CLI) or when the configured value isn't a recognised provider.
+ *
+ * Used as a per-workspace fallback when no global state value is set yet —
+ * lets users default to ask-nvidia in one repo and ask-claude in another via
+ * `.vscode/settings.json`.
+ */
+function getWorkspaceProviderFallback(): ApiProvider | null {
+	try {
+		// Lazy import: keeps standalone (non-VS-Code) builds from breaking when
+		// the vscode module isn't available at runtime.
+		// biome-ignore lint/correctness/noNodejsModules: optional VS Code host detection
+		const vscode = require("vscode")
+		if (!vscode?.workspace?.getConfiguration) return null
+		const cfg = vscode.workspace.getConfiguration("periscope")
+		const raw = cfg.get("defaultProvider") as string | undefined
+		if (!raw) return null
+		if (VALID_PERISCOPE_PROVIDERS.includes(raw as ApiProvider)) {
+			return raw as ApiProvider
+		}
+		Logger.warn(`[StateHelpers] periscope.defaultProvider="${raw}" is not a recognised provider, ignoring`)
+		return null
+	} catch {
+		// vscode module unavailable (standalone build) — no fallback.
+		return null
+	}
+}
+
 // ─── File-backed storage readers (used by StateManager) ────────────────────
 
 /**
@@ -91,8 +134,12 @@ export async function readGlobalStateFromStorage(store: ClineMemento): Promise<G
  * Handle properties that require computed logic
  */
 async function handleComputedProperties(result: any, stateValues: Map<string, any>): Promise<void> {
-	// 1. API Provider logic - set defaults based on existing values
-	const defaultApiProvider: ApiProvider = "ask-helmsman"
+	// 1. API Provider logic - precedence: explicit state -> workspace config -> built-in default.
+	// Workspace config (`periscope.defaultProvider` in .vscode/settings.json) lets users
+	// pick per-repo defaults — e.g., ask-nvidia for fast iteration repos, ask-claude for
+	// quality-critical repos. Falls back to ask-helmsman when nothing is configured.
+	const workspaceFallback = getWorkspaceProviderFallback()
+	const defaultApiProvider: ApiProvider = workspaceFallback ?? "ask-helmsman"
 	result.planModeApiProvider = result.planModeApiProvider || defaultApiProvider
 	result.actModeApiProvider = result.actModeApiProvider || defaultApiProvider
 

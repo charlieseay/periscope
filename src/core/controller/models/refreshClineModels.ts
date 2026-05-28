@@ -92,7 +92,7 @@ async function fetchRawClineModels(): Promise<ClineRawModelInfo[]> {
 		throw new Error("Invalid response data when fetching Cline models")
 	}
 
-	Logger.log("Cline models source: Cline API")
+	Logger.log("Periscope models source: Cline API")
 	return response.data.data as ClineRawModelInfo[]
 }
 
@@ -292,7 +292,7 @@ async function fetchAndCacheClineModels(): Promise<Record<string, ModelInfo>> {
 		}
 		// Save models and cache them in memory
 		await fs.writeFile(clineModelsFilePath, JSON.stringify(models))
-		Logger.log("Cline models fetched and saved")
+		Logger.log("Periscope models fetched and saved")
 	} catch (error) {
 		Logger.error("Error fetching Cline models:", error)
 

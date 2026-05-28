@@ -36,7 +36,7 @@ class ClineEndpoint {
 	private onPremiseConfig: EndpointsFileSchema | null = null
 	private environment: Environment = Environment.production
 	// Track if config came from bundled file (enterprise distribution)
-	private isBundled: boolean = false
+	private isBundled = false
 
 	private constructor() {
 		// Set environment at module load. Use override if provided.
@@ -66,7 +66,7 @@ class ClineEndpoint {
 		const endpointsConfig = await ClineEndpoint.loadEndpointsFile()
 		if (endpointsConfig) {
 			ClineEndpoint._instance.onPremiseConfig = endpointsConfig
-			Logger.log("Cline running in self-hosted mode with custom endpoints")
+			Logger.log("Periscope running in self-hosted mode with custom endpoints")
 		}
 
 		ClineEndpoint._initialized = true

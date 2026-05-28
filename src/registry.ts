@@ -63,7 +63,7 @@ export interface HostInfo {
 	 */
 	os: string
 	/**
-	 * The type of the cline host environment, e.g. 'VSCode Extension', 'Cline for JetBrains', 'CLI'
+	 * The type of the cline host environment, e.g. 'VSCode Extension', 'Periscope for JetBrains', 'CLI'
 	 * This is different from the platform because there are many JetBrains IDEs, but they all use the same
 	 * plugin.
 	 */

@@ -23,7 +23,7 @@ const FEATURE_TIPS: FeatureTipItem[] = [
 		text: "Set up MCP Servers to give Cline access to external tools and APIs.",
 	},
 	{
-		text: "Cline creates checkpoints after changes — you can always restore to a previous state.",
+		text: "Periscope creates checkpoints after changes — you can always restore to a previous state.",
 	},
 	{
 		text: "Use /compact to condense long conversations and free up context window space.",
@@ -38,7 +38,7 @@ const FEATURE_TIPS: FeatureTipItem[] = [
 		text: "You can drag and drop images into the chat to share screenshots with Cline.",
 	},
 	{
-		text: "Cline can browse websites — ask it to test your local dev server in the browser.",
+		text: "Periscope can browse websites — ask it to test your local dev server in the browser.",
 	},
 	{
 		text: "Use /reportbug to quickly file a GitHub issue with diagnostic context included.",

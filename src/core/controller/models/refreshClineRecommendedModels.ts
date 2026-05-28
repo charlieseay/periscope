@@ -122,7 +122,7 @@ async function fetchAndCacheClineRecommendedModels(): Promise<ClineRecommendedMo
 
 		result = normalized
 		await fs.writeFile(clineRecommendedModelsFilePath, JSON.stringify(result))
-		Logger.log("Cline recommended models fetched and saved")
+		Logger.log("Periscope recommended models fetched and saved")
 	} catch (error) {
 		Logger.error("Error fetching Cline recommended models:", error)
 

@@ -57,7 +57,7 @@ export class WebSearchToolHandler implements IFullyManagedTool {
 			const clineWebToolsEnabled = config.services.stateManager.getGlobalSettingsKey("clineWebToolsEnabled")
 			const featureFlagEnabled = featureFlagsService.getWebtoolsEnabled()
 			if (provider !== "cline" || !clineWebToolsEnabled || !featureFlagEnabled) {
-				return formatResponse.toolError("Cline web tools are currently disabled.")
+				return formatResponse.toolError("Periscope web tools are currently disabled.")
 			}
 
 			// Validate required parameters
@@ -121,18 +121,17 @@ export class WebSearchToolHandler implements IFullyManagedTool {
 						block.isNativeToolCall,
 					)
 					return formatResponse.toolDenied()
-				} else {
-					telemetryService.captureToolUsage(
-						config.ulid,
-						block.name,
-						config.api.getModel().id,
-						provider,
-						false,
-						true,
-						undefined,
-						block.isNativeToolCall,
-					)
 				}
+				telemetryService.captureToolUsage(
+					config.ulid,
+					block.name,
+					config.api.getModel().id,
+					provider,
+					false,
+					true,
+					undefined,
+					block.isNativeToolCall,
+				)
 			}
 
 			// Run PreToolUse hook after approval but before execution

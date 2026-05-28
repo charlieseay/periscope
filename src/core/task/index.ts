@@ -671,7 +671,7 @@ export class Task {
 	}> {
 		// Allow resume asks even when aborted to enable resume button after cancellation
 		if (this.taskState.abort && type !== "resume_task" && type !== "resume_completed_task") {
-			throw new Error("Cline instance aborted")
+			throw new Error("Periscope instance aborted")
 		}
 		let askTs: number
 		if (partial !== undefined) {
@@ -798,7 +798,7 @@ export class Task {
 			{ interval: 100 },
 		)
 		if (shouldWakeOnAbort && this.taskState.abort) {
-			throw new Error("Cline instance aborted")
+			throw new Error("Periscope instance aborted")
 		}
 		if (this.taskState.lastMessageTs !== askTs) {
 			throw new Error("Current ask promise was ignored") // could happen if we send multiple asks in a row i.e. with command_output. It's important that when we know an ask could fail, it is handled gracefully
@@ -832,7 +832,7 @@ export class Task {
 	): Promise<number | undefined> {
 		// Allow hook messages even when aborted to enable proper cleanup
 		if (this.taskState.abort && type !== "hook_status" && type !== "hook_output_stream") {
-			throw new Error("Cline instance aborted")
+			throw new Error("Periscope instance aborted")
 		}
 
 		const providerInfo = this.getCurrentProviderInfo()
@@ -1467,7 +1467,7 @@ export class Task {
 			}
 			// this.say(
 			// 	"tool",
-			// 	"Cline responded with only text blocks but has not called attempt_completion yet. Forcing him to continue with task..."
+			// 	"Periscope responded with only text blocks but has not called attempt_completion yet. Forcing him to continue with task..."
 			// )
 			nextUserContent = [
 				{
@@ -2211,7 +2211,7 @@ export class Task {
 
 	async presentAssistantMessage() {
 		if (this.taskState.abort) {
-			throw new Error("Cline instance aborted")
+			throw new Error("Periscope instance aborted")
 		}
 
 		// If we're locked, mark pending and return
@@ -2394,14 +2394,14 @@ export class Task {
 			if (autoApprovalSettings.enableNotifications) {
 				showSystemNotification({
 					subtitle: "Error",
-					message: "Cline is having trouble. Would you like to continue the task?",
+					message: "Periscope is having trouble. Would you like to continue the task?",
 				})
 			}
 			const { response, text, images, files } = await this.ask(
 				"mistake_limit_reached",
 				this.api.getModel().id.includes("claude")
 					? `This may indicate a failure in Cline's thought process or inability to use a tool properly, which can be mitigated with some user guidance (e.g. "Try breaking down the task into smaller steps").`
-					: "Cline uses complex prompts and iterative task execution that may be challenging for less capable models. For best results, it's recommended to use Claude 4.5 Sonnet for its advanced agentic coding capabilities.",
+					: "Periscope uses complex prompts and iterative task execution that may be challenging for less capable models. For best results, it's recommended to use Claude 4.5 Sonnet for its advanced agentic coding capabilities.",
 			)
 			if (response === "messageResponse") {
 				// Display the user's message in the chat UI
@@ -3092,7 +3092,7 @@ export class Task {
 
 			// need to call here in case the stream was aborted
 			if (this.taskState.abort) {
-				throw new Error("Cline instance aborted")
+				throw new Error("Periscope instance aborted")
 			}
 
 			// Stored the assistant API response immediately after the stream finishes in the same turn

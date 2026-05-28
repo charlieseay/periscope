@@ -433,8 +433,8 @@ export const ChatRowContent = memo(
 					const content = tool?.content || ""
 					const isApplyingPatch = content?.startsWith("%%bash") && !content.endsWith("*** End Patch\nEOF")
 					const editToolTitle = isApplyingPatch
-						? "Cline is creating patches to edit this file:"
-						: "Cline wants to edit this file:"
+						? "Periscope is creating patches to edit this file:"
+						: "Periscope wants to edit this file:"
 					return (
 						<div>
 							<div className={HEADER_CLASSNAMES}>
@@ -549,8 +549,8 @@ export const ChatRowContent = memo(
 									toolIcon("sign-out", "yellow", -90, "This is outside of your workspace")}
 								<span style={{ fontWeight: "bold" }}>
 									{message.type === "ask"
-										? "Cline wants to view the top level files in this directory:"
-										: "Cline viewed the top level files in this directory:"}
+										? "Periscope wants to view the top level files in this directory:"
+										: "Periscope viewed the top level files in this directory:"}
 								</span>
 							</div>
 							<CodeAccordian
@@ -571,8 +571,8 @@ export const ChatRowContent = memo(
 									toolIcon("sign-out", "yellow", -90, "This is outside of your workspace")}
 								<span style={{ fontWeight: "bold" }}>
 									{message.type === "ask"
-										? "Cline wants to recursively view all files in this directory:"
-										: "Cline recursively viewed all files in this directory:"}
+										? "Periscope wants to recursively view all files in this directory:"
+										: "Periscope recursively viewed all files in this directory:"}
 								</span>
 							</div>
 							<CodeAccordian
@@ -593,8 +593,8 @@ export const ChatRowContent = memo(
 									toolIcon("sign-out", "yellow", -90, "This file is outside of your workspace")}
 								<span style={{ fontWeight: "bold" }}>
 									{message.type === "ask"
-										? "Cline wants to view source code definition names used in this directory:"
-										: "Cline viewed source code definition names used in this directory:"}
+										? "Periscope wants to view source code definition names used in this directory:"
+										: "Periscope viewed source code definition names used in this directory:"}
 								</span>
 							</div>
 							<CodeAccordian
@@ -675,8 +675,8 @@ export const ChatRowContent = memo(
 									toolIcon("sign-out", "yellow", -90, "This URL is external")}
 								<span className="font-bold">
 									{message.type === "ask"
-										? "Cline wants to fetch content from this URL:"
-										: "Cline fetched content from this URL:"}
+										? "Periscope wants to fetch content from this URL:"
+										: "Periscope fetched content from this URL:"}
 								</span>
 							</div>
 							<div
@@ -704,8 +704,8 @@ export const ChatRowContent = memo(
 									toolIcon("sign-out", "yellow", -90, "This search is external")}
 								<span className="font-bold">
 									{message.type === "ask"
-										? "Cline wants to search the web for:"
-										: "Cline searched the web for:"}
+										? "Periscope wants to search the web for:"
+										: "Periscope searched the web for:"}
 								</span>
 							</div>
 							<div className="bg-code border border-editor-group-border overflow-hidden rounded-xs select-text py-[9px] px-2.5">

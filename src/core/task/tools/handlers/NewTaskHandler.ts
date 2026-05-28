@@ -38,7 +38,7 @@ export class NewTaskHandler implements IToolHandler, IPartialBlockHandler {
 		// Show notification if enabled
 		if (config.autoApprovalSettings.enableNotifications) {
 			showSystemNotification({
-				subtitle: "Cline wants to start a new task...",
+				subtitle: "Periscope wants to start a new task...",
 				message: `Cline is suggesting to start a new task with: ${context}`,
 			})
 		}
@@ -59,9 +59,8 @@ export class NewTaskHandler implements IToolHandler, IPartialBlockHandler {
 				images,
 				fileContentString,
 			)
-		} else {
-			// If no response, the user clicked the "Create New Task" button
-			return formatResponse.toolResult(`The user has created a new task with the provided context.`)
 		}
+		// If no response, the user clicked the "Create New Task" button
+		return formatResponse.toolResult(`The user has created a new task with the provided context.`)
 	}
 }
