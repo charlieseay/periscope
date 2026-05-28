@@ -19,6 +19,7 @@ import { ClineHandler } from "./providers/cline"
 import { DeepSeekHandler } from "./providers/deepseek"
 import { DifyHandler } from "./providers/dify"
 import { DoubaoHandler } from "./providers/doubao"
+import { FallbackApiHandler } from "./providers/fallback"
 import { FireworksHandler } from "./providers/fireworks"
 import { GeminiHandler } from "./providers/gemini"
 import { GroqHandler } from "./providers/groq"
@@ -106,8 +107,8 @@ function createHandlerForProvider(
 					mode === "plan" ? options.planModeThinkingBudgetTokens : options.actModeThinkingBudgetTokens,
 				enableParallelToolCalling: options.enableParallelToolCalling,
 			})
-		case "bedrock":
-			return new AwsBedrockHandler({
+		case "bedrock": {
+			const bedrockHandler = new AwsBedrockHandler({
 				onRetryAttempt: options.onRetryAttempt,
 				apiModelId: mode === "plan" ? options.planModeApiModelId : options.actModeApiModelId,
 				awsAccessKey: options.awsAccessKey,
@@ -130,6 +131,8 @@ function createHandlerForProvider(
 				thinkingBudgetTokens:
 					mode === "plan" ? options.planModeThinkingBudgetTokens : options.actModeThinkingBudgetTokens,
 			})
+			return new FallbackApiHandler(bedrockHandler, new AskHelmsmanHandler({ onRetryAttempt: options.onRetryAttempt }))
+		}
 		case "vertex":
 			return new VertexHandler({
 				onRetryAttempt: options.onRetryAttempt,
@@ -375,31 +378,55 @@ function createHandlerForProvider(
 				sapAiCoreUseOrchestrationMode: options.sapAiCoreUseOrchestrationMode,
 			})
 		case "ask-claude":
-			return new AskClaudeHandler({
-				onRetryAttempt: options.onRetryAttempt,
-				claudeCodePath: options.claudeCodePath,
-				apiModelId: mode === "plan" ? options.planModeApiModelId : options.actModeApiModelId,
-			})
+			// Claude Max quota exhausted? auto-fall-back to Helmsman (which routes
+			// NVIDIA → ask_claude → ask_gemini → ask_nova internally).
+			return new FallbackApiHandler(
+				new AskClaudeHandler({
+					onRetryAttempt: options.onRetryAttempt,
+					claudeCodePath: options.claudeCodePath,
+					apiModelId: mode === "plan" ? options.planModeApiModelId : options.actModeApiModelId,
+				}),
+				new AskHelmsmanHandler({ onRetryAttempt: options.onRetryAttempt }),
+			)
 		case "ask-nvidia":
-			return new AskNvidiaHandler({
-				onRetryAttempt: options.onRetryAttempt,
-				apiModelId: mode === "plan" ? options.planModeApiModelId : options.actModeApiModelId,
-			})
+			// NVIDIA rate limit / API outage? fall back to Helmsman router.
+			return new FallbackApiHandler(
+				new AskNvidiaHandler({
+					onRetryAttempt: options.onRetryAttempt,
+					apiModelId: mode === "plan" ? options.planModeApiModelId : options.actModeApiModelId,
+				}),
+				new AskHelmsmanHandler({ onRetryAttempt: options.onRetryAttempt }),
+			)
 		case "ask-gemini":
-			return new AskGeminiHandler({
-				onRetryAttempt: options.onRetryAttempt,
-				apiModelId: mode === "plan" ? options.planModeApiModelId : options.actModeApiModelId,
-			})
+			// Google One quota exhausted? fall back to Helmsman router.
+			return new FallbackApiHandler(
+				new AskGeminiHandler({
+					onRetryAttempt: options.onRetryAttempt,
+					apiModelId: mode === "plan" ? options.planModeApiModelId : options.actModeApiModelId,
+				}),
+				new AskHelmsmanHandler({ onRetryAttempt: options.onRetryAttempt }),
+			)
 		case "ask-nova":
-			return new AskNovaHandler({
-				onRetryAttempt: options.onRetryAttempt,
-				apiModelId: mode === "plan" ? options.planModeApiModelId : options.actModeApiModelId,
-			})
+			return new FallbackApiHandler(
+				new AskNovaHandler({
+					onRetryAttempt: options.onRetryAttempt,
+					apiModelId: mode === "plan" ? options.planModeApiModelId : options.actModeApiModelId,
+				}),
+				new AskHelmsmanHandler({ onRetryAttempt: options.onRetryAttempt }),
+			)
 		case "ask-helmsman":
-			return new AskHelmsmanHandler({
-				onRetryAttempt: options.onRetryAttempt,
-				apiModelId: mode === "plan" ? options.planModeApiModelId : options.actModeApiModelId,
-			})
+			// Helmsman ai-proxy down? fall back to ask_claude (Claude Max subscription
+			// is the last-resort because it's metered, but always available).
+			return new FallbackApiHandler(
+				new AskHelmsmanHandler({
+					onRetryAttempt: options.onRetryAttempt,
+					apiModelId: mode === "plan" ? options.planModeApiModelId : options.actModeApiModelId,
+				}),
+				new AskClaudeHandler({
+					onRetryAttempt: options.onRetryAttempt,
+					claudeCodePath: options.claudeCodePath,
+				}),
+			)
 		case "claude-code":
 			return new ClaudeCodeHandler({
 				onRetryAttempt: options.onRetryAttempt,

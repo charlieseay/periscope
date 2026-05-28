@@ -1,5 +1,5 @@
 import { execa } from "execa"
-import { AskNovaModelId, askNovaDefaultModelId, askNovaModels } from "@/shared/api"
+import { AskNovaModelId, askNovaDefaultModelId, askNovaLanes, askNovaModels } from "@/shared/api"
 import { ClineStorageMessage } from "@/shared/messages/content"
 import { Logger } from "@/shared/services/Logger"
 import { type ApiHandler, CommonApiHandlerOptions } from ".."
@@ -29,8 +29,10 @@ export class AskNovaHandler implements ApiHandler {
 	async *createMessage(systemPrompt: string, messages: ClineStorageMessage[]): ApiStream {
 		const model = this.getModel()
 
-		// Map model ID to the lane flag expected by ask_claude_bedrock
-		const lane = model.id === "haiku" ? "haiku" : "sonnet"
+		// Map model ID to the lane flag expected by ask_claude_bedrock — registry-driven,
+		// not a hardcoded compare. Adding a new ask-nova model means adding both an
+		// askNovaModels entry and an askNovaLanes mapping.
+		const lane = askNovaLanes[model.id as AskNovaModelId] ?? askNovaLanes[askNovaDefaultModelId]
 		const prompt = flattenToPrompt(systemPrompt, messages)
 
 		Logger.info(`[AskNovaHandler] lane=${lane}, prompt_len=${prompt.length}`)

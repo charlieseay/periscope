@@ -376,7 +376,56 @@
 		},
 		"configuration": {
 			"title": "Periscope",
-			"properties": {}
+			"properties": {
+				"periscope.defaultProvider": {
+					"type": "string",
+					"enum": [
+						"ask-helmsman",
+						"ask-nvidia",
+						"ask-claude",
+						"ask-gemini",
+						"ask-nova",
+						"bedrock",
+						"ollama"
+					],
+					"default": "ask-helmsman",
+					"description": "Provider used when starting a new task with no explicit selection. ask-helmsman routes through ai-proxy (NVIDIA → ask_claude → ask_gemini → ask_nova) and is the recommended default."
+				},
+				"periscope.helmsman.defaultRoute": {
+					"type": "string",
+					"enum": [
+						"auto",
+						"web",
+						"writing",
+						"code"
+					],
+					"default": "auto",
+					"description": "Default Helmsman route when using ask-helmsman provider. 'auto' lets Helmsman classify each request. 'web' forces Gemini (Google Search grounding). 'writing' forces ask_claude (quality prose). 'code' forces NVIDIA code lane."
+				},
+				"periscope.nvidia.defaultLane": {
+					"type": "string",
+					"enum": [
+						"fast",
+						"balanced",
+						"large",
+						"code",
+						"thinking"
+					],
+					"default": "balanced",
+					"description": "Default NVIDIA lane when using ask-nvidia provider."
+				},
+				"periscope.logLevel": {
+					"type": "string",
+					"enum": [
+						"debug",
+						"info",
+						"warn",
+						"error"
+					],
+					"default": "info",
+					"description": "Periscope logger verbosity. 'debug' includes per-request prompt sizes and route classifications."
+				}
+			}
 		}
 	},
 	"scripts": {

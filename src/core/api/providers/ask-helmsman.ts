@@ -39,13 +39,15 @@ export class AskHelmsmanHandler implements ApiHandler {
 
 		const prompt = flattenToPrompt(systemPrompt, messages)
 
-		// CLI args have limits and large prompts cause silent hangs. Bail early with a
-		// clear message so the user knows to switch to ask-claude for deep context tasks.
+		// CLI args have limits and large prompts cause silent hangs. Auto-degrade to
+		// ask_claude for deep-context tasks instead of throwing — the user gets a
+		// response from the fallback provider plus a one-line notice that the switch
+		// happened, instead of a red error and a manual provider re-selection.
 		const MAX_PROMPT_CHARS = 80_000
 		if (prompt.length > MAX_PROMPT_CHARS) {
-			throw new Error(
-				`[AskHelmsmanHandler] Conversation too large for CLI provider (${prompt.length.toLocaleString()} chars > ${MAX_PROMPT_CHARS.toLocaleString()} limit). Switch to ask-claude or ask-nvidia provider for this task.`,
-			)
+			Logger.info(`[AskHelmsmanHandler] prompt ${prompt.length} > ${MAX_PROMPT_CHARS} chars — auto-degrading to ask_claude`)
+			yield* this.fallbackToAskClaude(prompt, "prompt too large for Helmsman CLI")
+			return
 		}
 
 		// --route maps to the 4 Helmsman routes: nvidia / web / writing / code
@@ -164,6 +166,44 @@ export class AskHelmsmanHandler implements ApiHandler {
 		}
 
 		yield { type: "text", text }
+		yield usage
+	}
+
+	/**
+	 * Auto-degrade path: when the Helmsman CLI can't handle the prompt (too large for
+	 * shell args), shell out to ask_claude directly. The user gets a response from the
+	 * Claude Max subscription with a one-line notice prefixed to the output so they
+	 * know the switch happened.
+	 */
+	private async *fallbackToAskClaude(prompt: string, reason: string): ApiStream {
+		const ASK_CLAUDE_BIN = `${process.env.HOME}/.local/bin/ask_claude`
+		const usage: ApiStreamUsageChunk = {
+			type: "usage",
+			inputTokens: 0,
+			outputTokens: 0,
+			cacheReadTokens: 0,
+			cacheWriteTokens: 0,
+		}
+
+		let result: { stdout: string; stderr: string }
+		try {
+			result = await execa(ASK_CLAUDE_BIN, [prompt], {
+				timeout: 300_000,
+				maxBuffer: 20_000_000,
+			})
+		} catch (err: unknown) {
+			throw new Error(
+				`[AskHelmsmanHandler] auto-degrade to ask_claude also failed (${reason}): ${err instanceof Error ? err.message : String(err)}`,
+			)
+		}
+
+		const text = result.stdout.trim()
+		if (!text) {
+			throw new Error(`[AskHelmsmanHandler] ask_claude returned empty response (auto-degrade for: ${reason})`)
+		}
+
+		// Prepend a one-line notice so the user sees the provider switched.
+		yield { type: "text", text: `_[auto-degraded to ask_claude: ${reason}]_\n\n${text}` }
 		yield usage
 	}
 

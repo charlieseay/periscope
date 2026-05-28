@@ -670,6 +670,14 @@ export const askNovaModels = {
 	},
 } as const satisfies Record<string, ModelInfo>
 
+// Lane mapping for ask_claude_bedrock CLI. Keeps the model→lane assignment
+// in a registry instead of a literal `model.id === "haiku" ? "haiku" : "sonnet"`
+// compare inside the handler (per feedback_dynamic_config).
+export const askNovaLanes: Record<AskNovaModelId, string> = {
+	sonnet: "sonnet",
+	haiku: "haiku",
+}
+
 // AWS Bedrock
 // https://docs.aws.amazon.com/bedrock/latest/userguide/conversation-inference.html
 export type BedrockModelId = keyof typeof bedrockModels
