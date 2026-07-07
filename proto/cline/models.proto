@@ -55,6 +55,8 @@ service ModelsService {
   rpc getAihubmixModels(EmptyRequest) returns (OpenRouterCompatibleModelInfo);
   // Refreshes and returns Vercel AI Gateway models
   rpc refreshVercelAiGatewayModelsRpc(EmptyRequest) returns (OpenRouterCompatibleModelInfo);
+  // Fetches available Bedrock models for the configured AWS credentials/region
+  rpc refreshBedrockModelsRpc(EmptyRequest) returns (StringArray);
 }
 
 // List of VS Code LM models

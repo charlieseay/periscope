@@ -1,4 +1,5 @@
 import { bedrockDefaultModelId, bedrockModels, CLAUDE_SONNET_1M_SUFFIX } from "@shared/api"
+import { EmptyRequest } from "@shared/proto/cline/common"
 import BedrockData from "@shared/providers/bedrock.json"
 import type { Mode } from "@shared/storage/types"
 import { isClaudeOpusAdaptiveThinkingModel, resolveClaudeOpusAdaptiveThinking } from "@shared/utils/reasoning-support"
@@ -11,10 +12,11 @@ import {
 	VSCodeTextField,
 } from "@vscode/webview-ui-toolkit/react"
 import Fuse from "fuse.js"
-import { type KeyboardEvent, useEffect, useMemo, useRef, useState } from "react"
+import { type KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import styled from "styled-components"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { useExtensionState } from "@/context/ExtensionStateContext"
+import { ModelsServiceClient } from "@/services/grpc-client"
 import { DebouncedTextField } from "../common/DebouncedTextField"
 import { ModelInfoView } from "../common/ModelInfoView"
 import { DropdownContainer } from "../common/ModelSelector"
@@ -59,6 +61,31 @@ export const BedrockProvider = ({ showModelOptions, isPopup, currentMode }: Bedr
 	const adaptiveThinkingDefaultEffort =
 		resolveClaudeOpusAdaptiveThinking(modeFields.reasoningEffort, modeFields.thinkingBudgetTokens).effort ?? "none"
 	const [awsEndpointSelected, setAwsEndpointSelected] = useState(!!apiConfiguration?.awsBedrockEndpoint)
+
+	// Available models from AWS (null = not yet fetched)
+	const [availableModels, setAvailableModels] = useState<string[] | null>(null)
+	const [isLoadingModels, setIsLoadingModels] = useState(false)
+
+	const fetchAvailableModels = useCallback(async () => {
+		setIsLoadingModels(true)
+		try {
+			const result = await ModelsServiceClient.refreshBedrockModelsRpc(EmptyRequest.create({}))
+			setAvailableModels(result.values)
+		} catch {
+			// On error keep showing the full static list
+			setAvailableModels(null)
+		} finally {
+			setIsLoadingModels(false)
+		}
+	}, [])
+
+	const visibleModels = useMemo(() => {
+		const allKeys = Object.keys(bedrockModels)
+		if (!availableModels) return allKeys
+		// Show only models present in the AWS account; always include the current selection
+		const selected = modeFields.awsBedrockCustomSelected ? null : selectedModelId
+		return allKeys.filter((id) => availableModels.includes(id) || id === selected)
+	}, [availableModels, selectedModelId, modeFields.awsBedrockCustomSelected])
 
 	// Region combobox state
 	const currentRegion = apiConfiguration?.awsRegion || ""
@@ -432,9 +459,19 @@ export const BedrockProvider = ({ showModelOptions, isPopup, currentMode }: Bedr
 
 			{showModelOptions && (
 				<>
-					<label htmlFor="bedrock-model-dropdown">
-						<span className="font-medium">Model</span>
-					</label>
+					<div className="flex items-center justify-between">
+						<label htmlFor="bedrock-model-dropdown">
+							<span className="font-medium">Model</span>
+						</label>
+						<button
+							className="text-xs text-description hover:text-foreground flex items-center gap-1 bg-transparent border-0 cursor-pointer p-0"
+							disabled={isLoadingModels}
+							onClick={fetchAvailableModels}
+							title="Load models available in your AWS account">
+							<i className={`codicon codicon-refresh ${isLoadingModels ? "animate-spin" : ""}`} />
+							{availableModels ? `${availableModels.length} available` : "Load from AWS"}
+						</button>
+					</div>
 					<DropdownContainer className="dropdown-container" zIndex={DROPDOWN_Z_INDEX - 2}>
 						<VSCodeDropdown
 							className="w-full"
@@ -464,7 +501,7 @@ export const BedrockProvider = ({ showModelOptions, isPopup, currentMode }: Bedr
 							}}
 							value={modeFields.awsBedrockCustomSelected ? "custom" : selectedModelId}>
 							<VSCodeOption value="">Select a model...</VSCodeOption>
-							{Object.keys(bedrockModels).map((modelId) => (
+							{visibleModels.map((modelId) => (
 								<VSCodeOption
 									className="whitespace-normal wrap-break-word max-w-full"
 									key={modelId}
@@ -515,7 +552,7 @@ export const BedrockProvider = ({ showModelOptions, isPopup, currentMode }: Bedr
 									}
 									value={modeFields.awsBedrockCustomModelBaseId || bedrockDefaultModelId}>
 									<VSCodeOption value="">Select a model...</VSCodeOption>
-									{Object.keys(bedrockModels).map((modelId) => (
+									{visibleModels.map((modelId) => (
 										<VSCodeOption
 											className="whitespace-normal wrap-break-word max-w-full"
 											key={modelId}
