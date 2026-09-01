@@ -4,7 +4,7 @@
 **Status:** active  
 **Owner:** SeaynicNet Platform Team  
 **Created:** 2025-08-15  
-**Last Updated:** 2026-06-10
+**Last Updated:** 2026-09-01
 
 ## Purpose
 Internal VS Code coding agent (fork of Cline). Routes through Helmsman to preserve Claude Max quota by defaulting to NVIDIA/Nova/Gemini for everyday work. Not on marketplace, installed via local .vsix.
@@ -69,28 +69,34 @@ code --install-extension periscope-*.vsix
 
 ---
 
-## Assessment — 2026-06-10
+## Assessment — 2026-09-01
 
 ### Errors & Risks
-[CRIT] 6 high-severity npm vulnerabilities in OpenTelemetry + xmldom: XML injection (GHSA-wh4c-j3r5-mjhp), DoS via recursion (GHSA-2v35-w6hq-6mfw), middleware bypass (GHSA-92pp-h63x-v22m). [HIGH] 134 TODO/FIXME items in codebase — unsustainable; triage into priority buckets. [HIGH] No test coverage reported; "test" script exists but status unknown. [MED] Model picker UX flakiness reported (task #1001002, #1001005) — needs fallback logic.
+[CRIT] 28 npm vulnerabilities: 1 critical (extract-zip symlink traversal), 20 high (brace-expansion DoS ×6, sharp/libvips CVE-2026-33327/33328/35590/35591), 4 moderate, 3 low. `npm audit fix` available; `--force` breaks ink-picture dependency.
+[HIGH] 134+ TODO/FIXME items in codebase (last assessment). No current triage visible. Blocks maintenance.
+[HIGH] Model picker UX flakiness reported in prior assessment — fallback logic missing.
+[MED] No test coverage target or CI-enforced coverage gates. Test suite exists but baseline unknown.
 
 ### Security
-[FAIL] Dependency chain has 6 unpatched CVEs; `npm audit fix` available for all. Missing: input validation on LLM responses before rendering in UI. MCP tool execution needs sandboxing review. No rate limiting on local Ollama calls (could exhaust system resources).
+[FAIL] 28 unpatched CVEs in transitive dependencies (brace-expansion chain affects 10+ packages). Symlink traversal in extract-zip allows directory escape. Missing: input validation on LLM responses before UI rendering. MCP tool execution sandboxing not reviewed. No rate limiting on Ollama (could exhaust system).
+[MED] Hardcoded Claude preference in some code paths despite Helmsman-first routing design.
 
 ### Improvements
-1. Run `npm audit fix` immediately (blocking for production use)
-2. Triage 134 TODOs into P0/P1/P2; mark tech debt for next sprint
-3. Add test coverage target (aim for >70% for UI-critical paths)
-4. Implement model picker fallback + state refresh logic
+1. Run `npm audit fix` to address low/moderate vulns (most) and high vulns in brace-expansion chain (9 packages)
+2. For critical extract-zip symlink traversal (GHSA-jmr9-qjv8-65gv) — update to patched version or replace with alternative
+3. Investigate sharp/libvips CVEs (4 new CVEs in 2026) — confirm impact on Periscope's image pipeline
+4. Triage 134+ TODOs into P0/P1/P2; move to issues if not actionable
+5. Establish test coverage baseline (e.g., >70% for UI-critical paths); add to CI gates
+6. Implement model picker fallback + Helmsman routing policy verification
 
 ### Cost
-[MED] Routes through Helmsman (NVIDIA-first) by design, but hardcoded Claude preference in some code paths. Verify all providers respect routing policy.
+Routes through Helmsman (NVIDIA-first) by design. Verify hardcoded Claude calls respect quota preservation.
 
 ### Performance
-[MED] No obvious bottlenecks, but MCP proxy latency not measured. Local Ollama can block UI; needs async/worker pattern.
+No obvious bottlenecks. MCP proxy latency not measured. Local Ollama can block UI; needs async pattern.
 
 ### Verdict
-**C+** — Feature-rich but operationally risky; high CVE burden + TODO sprawl require cleanup before production push. Model picker flakiness needs immediate fix.
+**D+** — Feature-rich but operationally unsafe. 28 npm vulnerabilities (1 critical, 20 high) are blocking for production. Extract-zip critical symlink traversal must be fixed immediately. TODO sprawl and missing test coverage require triage before any release.
 
 ---
 
