@@ -4,7 +4,7 @@
 **Status:** active  
 **Owner:** SeaynicNet Platform Team  
 **Created:** 2025-08-15  
-**Last Updated:** 2026-09-01
+**Last Updated:** 2026-10-07
 
 ## Purpose
 Internal VS Code coding agent (fork of Cline). Routes through Helmsman to preserve Claude Max quota by defaulting to NVIDIA/Nova/Gemini for everyday work. Not on marketplace, installed via local .vsix.
@@ -16,7 +16,35 @@ Internal VS Code coding agent (fork of Cline). Routes through Helmsman to preser
 
 ---
 
-## Last Decisions
+## Assessment — 2026-10-07
+
+### Errors & Risks
+[CRIT] 70 npm vulnerabilities: 5 critical (up from 1), 51 high (up from 20), 11 moderate, 3 low. Extract-zip symlink traversal + sharp libvips CVEs + brace-expansion DoS chain. Blocking for any release.
+[HIGH] Zero commits in 90 days — stale codebase, unresponsive to security patches.
+[HIGH] 140 total npm deps (96 direct), massive dependency surface for a single-purpose VS Code extension.
+[MED] No test coverage target enforced; integration tests exist but coverage baseline unknown.
+
+### Security
+[FAIL] 70 unpatched npm CVEs block any production use. Extract-zip critical (symlink escape), sharp affects image pipeline (if used), brace-expansion DoS affects 10+ transitive deps.
+[MED] No input validation on LLM responses before UI rendering (XSS risk if model returns HTML).
+[MED] MCP tool execution sandboxing not reviewed.
+[LOW] Hardcoded Claude preference in some code paths despite Helmsman-first design.
+
+### Improvements
+1. Run `npm audit fix --force` to patch all fixable vulns; manually update extract-zip, sharp, brace-expansion
+2. Investigate 5 critical CVEs for impact on extension functionality (likely low if image pipeline not core)
+3. Enable dependabot for npm to catch future vulns automatically
+4. Resume active development: merge security patches, add CI/CD gates for vulnerability count
+5. Audit MCP tool execution context (check tool argument validation, command injection risks)
+
+### Cost
+Routes through Helmsman (NVIDIA-first). Verify hardcoded Claude calls respect quota preservation.
+
+### Performance
+No obvious bottlenecks. Dependency load (140 packages) increases startup time; consider tree-shaking/bundling.
+
+### Verdict
+**D** — Operationally unsafe for production. 70 npm vulnerabilities (5 critical, 51 high) + 90 days stale + 140 deps = security risk. Requires immediate patch cycle + resumption of active maintenance. (was D+ on 2026-09-01, worsened due to stale codebase)
 
 | Date | Decision | Rationale | Impact |
 |------|----------|-----------|--------|
